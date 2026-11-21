@@ -12,7 +12,7 @@ on:
 
 jobs:
   publish:
-    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'feat: localize SSH Manager terminal in English and German (#3)') }}
+    if: "${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'feat: localize SSH Manager terminal in English and German (#3)') }}"
     runs-on: ubuntu-latest
     permissions:
       contents: write
