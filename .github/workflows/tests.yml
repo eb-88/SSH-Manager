@@ -1,0 +1,22 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - feature/terminal-localization-en-de
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Bash and PowerShell
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bash regression tests
+        run: bash tests/ssh-manager-linux.sh
+      - name: PowerShell regression tests
+        shell: pwsh
+        run: ./tests/SSH-Manager.Tests.ps1

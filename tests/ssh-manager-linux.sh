@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
+SSH_MANAGER_LANG=de
 source "$(dirname -- "${BASH_SOURCE[0]}")/../ssh-manager.sh"
 
 scratch=$(mktemp -d)
@@ -102,4 +103,12 @@ check grep -F 'Eintrag 2' "$screen"
 check jq -es 'length == 2' "$store"/ziel-*.json
 run_menu o l 1 j q
 check jq -es 'length == 1 and .[0].Name == "Web"' "$store"/ziel-*.json
+# The new default renders English; switching languages persists without changing targets.
+unset SSH_MANAGER_LANG
+language=en
+run_menu o g 2 o g 1 q
+check grep -F 'Choose language' "$screen"
+check grep -F 'Sprache wählen' "$screen"
+check grep -Fx en "$store/language"
+check jq -es 'length == 1 and .[0].Login == "Schlüssel"' "$store"/ziel-*.json
 printf 'Linux-Tests bestanden.\n'

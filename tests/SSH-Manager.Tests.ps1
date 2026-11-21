@@ -1,5 +1,6 @@
 ﻿#requires -Version 5.1
 . (Join-Path $PSScriptRoot '../SSH-Manager.ps1')
+$script:Language = 'de'
 
 function Assert($condition, $message) {
     if (-not $condition) { throw $message }
@@ -303,6 +304,18 @@ try {
     $singleExport = Join-Path $store 'Einzeln.json'
     Assert ((Import-Targets $importPath).Added -eq 1 -and (Export-Targets $singleExport) -eq 1 -and
         (Import-Targets $singleExport).Skipped -eq 1) 'Exportdatei mit einem Ziel muss importierbar sein.'
+    # Check the default English presentation, both language choices, and stable profile data.
+    $script:Language = 'en'
+    Assert ((Translate-Text 'Optionen') -ceq 'Options' -and
+        (Translate-Text '[O] Optionen   [Q] Beenden') -ceq '[O] Options   [Q] Quit' -and
+        (Translate-Text "Ziel 'Test' gespeichert.") -ceq "Target 'Test' saved.") 'English text was not translated.'
+    $screen.Clear()
+    $answers = [Collections.Queue]::new(@('O','G','2','O','G','1','Q'))
+    Start-Manager
+    Assert ($script:Language -eq 'en' -and $screen -contains 'Choose language · [1] English  [2] German' -and
+        $screen -contains 'Sprache wählen · [1] Englisch  [2] Deutsch' -and
+        [IO.File]::ReadAllText((Join-Path $store 'language')) -ceq 'en') 'Language switching failed.'
+    $script:Language = 'de'
     Write-Output 'Alle Tests bestanden.'
 } finally {
     foreach ($file in [IO.Directory]::GetFiles($store)) { [IO.File]::Delete($file) }

@@ -24,7 +24,13 @@ Du brauchst Windows PowerShell 5.1 oder PowerShell 7, Git und die OpenSSH-Befehl
 git clone --depth 1 https://github.com/eb-88/SSH-Manager.git "$HOME/SSH-Manager"; if ($LASTEXITCODE -eq 0) { & "$HOME/SSH-Manager/SSH-Manager.ps1" }
 ```
 
-Bestätige beim ersten Start mit **j**, damit du `SSH-Manager` aus jedem Ordner aufrufen kannst. Lass den Installationsordner an seinem Platz, damit der Befehl das Skript findet.
+Bestätige beim ersten Start mit **y** (oder **j**), damit du `SSH-Manager` aus jedem Ordner aufrufen kannst. Lass den Installationsordner an seinem Platz, damit der Befehl das Skript findet.
+
+## Sprache im Terminal
+
+SSH-Manager startet standardmäßig mit englischen Menüs, unabhängig von der Systemsprache. Unter **O → G → 1** wählst du Englisch und unter **O → G → 2** Deutsch. Die Auswahl wird in `~/.ssh/ssh-manager/language` gespeichert und gilt für beide Skripte auf demselben Gerät.
+
+Für einen einzelnen Start kannst du die gespeicherte Auswahl mit `SSH_MANAGER_LANG=de` oder `SSH_MANAGER_LANG=en` überschreiben. In PowerShell setzt du beispielsweise `$env:SSH_MANAGER_LANG = 'de'`. SSH-Zieldaten, Anmeldearten und das JSON-Import-/Exportformat bleiben unverändert.
 
 ## Die erste Verbindung
 

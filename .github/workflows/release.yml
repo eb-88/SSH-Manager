@@ -1,0 +1,48 @@
+name: Publish release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Version tag (for example v0.2.1)
+        required: true
+        type: string
+
+jobs:
+  publish:
+    if: "${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'feat: localize SSH Manager terminal in English and German (#3)') }}"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test Bash
+        run: bash tests/ssh-manager-linux.sh
+      - name: Test PowerShell
+        shell: pwsh
+        run: ./tests/SSH-Manager.Tests.ps1
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || 'v0.2.0' }}
+        run: |
+          set -euo pipefail
+          notes=$(cat <<'NOTES'
+          SSH Manager now supports English and German throughout its PowerShell and Bash terminal interfaces.
+
+          - English is the default language.
+          - Choose English or German in Options → G, without restarting.
+          - The language setting is saved locally and can be overridden with SSH_MANAGER_LANG=en or SSH_MANAGER_LANG=de.
+          - Existing SSH targets, stored login methods, and JSON imports/exports remain compatible.
+          - Both Bash and PowerShell regression suites pass on the GitHub Actions Ubuntu runner.
+
+          [Changes since v0.1.1](https://github.com/eb-88/SSH-Manager/compare/v0.1.1...v0.2.0)
+          NOTES
+          )
+          gh release create "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "SSH Manager $TAG" \
+            --notes "$notes"
