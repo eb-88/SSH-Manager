@@ -680,18 +680,18 @@ function Show-TargetMenu($targets, $total, $filter, $width) {
         Write-MenuText 'Noch keine Ziele. Unter Optionen kannst du Ziele anlegen oder importieren.' $width
         Write-Host ''
     }
-    $actions = '[O] Optionen   [Q] Beenden'
-    if ($targets.Count) { $actions = '[Nr] Verbinden   ' + $actions }
+    $actions = '[O] Optionen   [Q] Beenden'
+    if ($targets.Count) { $actions = '[Nr] Verbinden   ' + $actions }
     Write-MenuText $actions $width
 }
 
 function Read-ManagerOption($width) {
     Write-Host ''
     Write-MenuText 'Optionen' $width Cyan
-    Write-MenuText '[N] Neu   [B] Bearbeiten   [L] Löschen' $width
-    Write-MenuText '[S] Suchen   [I] Import   [E] Export' $width
-    Write-MenuText '[G] Sprache' $width
-    Write-MenuText '[Enter] Zurück' $width
+    Write-MenuText '[N] Neu   [B] Bearbeiten   [L] Löschen' $width
+    Write-MenuText '[S] Suchen   [I] Import   [E] Export' $width
+    Write-MenuText '[G] Sprache' $width
+    Write-MenuText '[Enter] Zurück' $width
     while ($true) {
         $inputText = Read-MenuInput 'Option' $width
         if ($null -eq $inputText) { return }
