@@ -4,38 +4,27 @@
 
 SSH-Manager saves your SSH destinations in a terminal menu that runs in PowerShell or in Bash on Linux. Enter a target number to open an SSH session with the saved host, user and port. The menu is in German. The steps below use the labels you’ll see on screen.
 
-## First launch
-
-### PowerShell
-
-You need Windows PowerShell 5.1 or PowerShell 7 and the OpenSSH commands `ssh` and `ssh-keygen`. To check that PowerShell can find both, run `Get-Command ssh, ssh-keygen`.
-
-In Azure DevOps, open **Repos → Files → Clone** and copy the clone URL. Replace the placeholder below with that URL and run these commands in PowerShell.
-
-```powershell
-git clone "<clone URL>" SSH-Manager
-Set-Location SSH-Manager
-.\SSH-Manager.ps1
-```
-
-If the global command is available, the menu opens directly. Otherwise, the script offers to register it for your account. Enter **j** (yes) to launch the tool as `SSH-Manager` from any folder, including in a new PowerShell session. Keep the script at its current location because the command points to that file. Press **Enter** to skip registration and continue to the menu.
+## Install SSH-Manager
 
 ### Linux
 
-The Linux version requires Bash 4.4 or later, `jq` 1.6 or later, the OpenSSH client, and `flock` from util-linux. On Debian and Ubuntu, install the commands with `sudo apt install jq openssh-client util-linux`.
-
-Start the menu from the cloned repository.
+Requires Bash 4.4 or later, Git, `jq` 1.6 or later, the OpenSSH client, and `flock` from util-linux. On Debian and Ubuntu, run `sudo apt install git jq openssh-client util-linux` if needed.
 
 ```bash
-bash ./ssh-manager.sh
+git clone --depth 1 https://github.com/eb-88/SSH-Manager.git "$HOME/.local/share/ssh-manager" && install -Dm755 "$HOME/.local/share/ssh-manager/ssh-manager.sh" "$HOME/.local/bin/ssh-manager"
 ```
 
-If `~/.local/bin` is on your `PATH`, you can install the script as the `ssh-manager` command.
+Start with `~/.local/bin/ssh-manager`, or just `ssh-manager` if `~/.local/bin` is on your `PATH`.
 
-```bash
-install -Dm755 ssh-manager.sh ~/.local/bin/ssh-manager
-ssh-manager
+### PowerShell
+
+Requires Windows PowerShell 5.1 or PowerShell 7, Git, and the OpenSSH commands `ssh` and `ssh-keygen`.
+
+```powershell
+git clone --depth 1 https://github.com/eb-88/SSH-Manager.git "$HOME/SSH-Manager"; if ($LASTEXITCODE -eq 0) { & "$HOME/SSH-Manager/SSH-Manager.ps1" }
 ```
+
+When prompted, enter **j** to register `SSH-Manager` for your account. Keep the installed folder in place so the command can find the script.
 
 ## Connect to your first target
 
