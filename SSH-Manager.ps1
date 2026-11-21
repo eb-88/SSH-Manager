@@ -3,6 +3,158 @@
 $ErrorActionPreference = 'Stop'
 $store = Join-Path (Join-Path $HOME '.ssh') 'ssh-manager'
 
+# Display-only localization. Persisted profile and export values never change.
+$script:Language = 'en'
+$script:English = @{
+    'Der Kurzname braucht 1–64 Zeichen und beginnt mit einem Buchstaben oder einer Zahl. Erlaubt sind A–Z, 0–9, Punkt, Unterstrich und Bindestrich.' = 'The short name must be 1–64 characters, starting with a letter or digit. Allowed: A–Z, 0–9, period, underscore, and hyphen.'
+    'Die Anmeldung mit dem bisherigen Schlüssel konnte nicht bestätigt werden. Ein neuer Eintrag kann bestehende Schlüsselbeschränkungen umgehen.' = 'Authentication with the existing key could not be confirmed. A new entry could bypass key restrictions.'
+    'Anmeldung mit dem vorgesehenen Schlüssel fehlgeschlagen. Beim nächsten Versuch wird derselbe Schlüssel verwendet.' = 'Login with the intended key failed. The same key will be reused on the next attempt.'
+    'Schlüsselanmeldung fehlgeschlagen. Beim nächsten Versuch wird derselbe Schlüssel verwendet.' = 'Key login failed. The same key will be reused on the next attempt.'
+    'Dafür einen Verweis im PowerShell-Modulverzeichnis deines Benutzerkontos anlegen? [j/N]' = 'Create a launcher in your user PowerShell module directory? [y/N]'
+    'Gib künftig in PowerShell in einem beliebigen Ordner SSH-Manager ein und drücke Enter.' = 'Run SSH-Manager from any PowerShell directory in the future.'
+    'Installation fehlgeschlagen. Beim nächsten Versuch wird derselbe Schlüssel verwendet.' = 'Installation failed. The same key will be reused on the next attempt.'
+    'Bitte einen Hostnamen oder eine IP-Adresse ohne Leerzeichen und Klammern eingeben.' = 'Enter a hostname or IP address without spaces or brackets.'
+    'Passwortanmeldung prüfen … Beim Erstkontakt den Host-Fingerabdruck abgleichen.' = 'Checking password login … Verify the host fingerprint on first contact.'
+    'Das PowerShell-Modulverzeichnis deines Benutzerkontos fehlt in PSModulePath.' = 'Your user PowerShell module directory is missing from PSModulePath.'
+    'Mit dem Befehl SSH-Manager kannst du dieses Skript aus jedem Ordner starten.' = 'The SSH-Manager command lets you start this script from any directory.'
+    'Bitte einen SSH-Benutzernamen mit Buchstaben, Zahlen oder . _ @ - eingeben.' = 'Enter an SSH username using letters, digits, or . _ @ -.'
+    'Lade das Modul in jeder neuen Sitzung zuerst mit Import-Module SSH-Manager.' = 'In each new session, load the module with Import-Module SSH-Manager.'
+    'Noch keine Ziele. Unter Optionen kannst du Ziele anlegen oder importieren.' = 'No targets yet. Add or import targets under Options.'
+    'Das Ziel wurde inzwischen geändert oder gelöscht. Bitte erneut auswählen.' = 'The target was changed or deleted. Select it again.'
+    'Keine Treffer. Unter Optionen kannst du die Suche ändern oder leeren.' = 'No matches. Change or clear the search under Options.'
+    'Die Datei existiert bereits. Bitte einen anderen Dateinamen wählen.' = 'The file already exists. Choose another file name.'
+    'Ein neuer Eintrag kann bestehende Schlüsselbeschränkungen umgehen.' = 'A new entry could bypass key restrictions.'
+    'Gib zuerst Import-Module SSH-Manager und danach SSH-Manager ein.' = 'Run Import-Module SSH-Manager, then SSH-Manager.'
+    'Bitte eine gültige SSH-Manager-Exportdatei (Version 1) wählen.' = 'Select a valid SSH-Manager export file (version 1).'
+    'Erlaubt sind 1–64 Zeichen: Buchstaben, Zahlen, Punkt, _ und -.' = 'Allowed: 1–64 characters: letters, digits, period, _ and -.'
+    'Der Speicher ist gerade in Benutzung. Bitte erneut versuchen.' = 'The store is in use. Please retry.'
+    'Der Name SSH-Manager ist durch einen anderen Befehl belegt (' = 'The SSH-Manager name is already used by another command ('
+    'Fingerabdruck des Schlüssels konnte nicht gelesen werden: ' = 'Could not read key fingerprint: '
+    'Schlüssel übertragen … Serverpasswort erneut eingeben.' = 'Uploading key … Enter the server password again.'
+    'Lokale Schlüssel und Serverfreigaben bleiben erhalten.' = 'Local keys and server authorizations are kept.'
+    'Enter übernimmt den Wert in [Klammern]. ! bricht ab.' = 'Enter accepts the value in [brackets]. ! cancels.'
+    '). Du kannst dieses Skript weiterhin direkt starten.' = '). You can still start this script directly.'
+    'Bitte eine angezeigte Zielnummer, O oder Q eingeben.' = 'Enter a target number shown above, O, or Q.'
+    'Import · Gleichnamige Ziele werden übersprungen.' = 'Import · Duplicate target names are skipped.'
+    'Bitte einen gültigen SSH-Benutzernamen eingeben.' = 'Enter a valid SSH username.'
+    'Bitte einen Port zwischen 1 und 65535 eingeben.' = 'Enter a port between 1 and 65535.'
+    'Bitte Hostname oder IP ohne Klammern eingeben.' = 'Enter a hostname or IP address without brackets.'
+    'Passphrase für den neuen Schlüssel festlegen.' = 'Set a passphrase for the new key.'
+    'Keine Treffer. Suche unter Optionen ändern.' = 'No matches. Change the search under Options.'
+    '[Nr] Verbinden   [O] Optionen   [Q] Beenden' = '[No] Connect   [O] Options   [Q] Quit'
+    '1  Schlüssel per Serverpasswort einrichten' = '1  Set up a key using the server password'
+    '2  Bestehende OpenSSH-Konfiguration nutzen' = '2  Use existing OpenSSH configuration'
+    'Anmeldung mit dem neuen Schlüssel prüfen …' = 'Checking login with the new key …'
+    'Sprache wählen · [1] Englisch  [2] Deutsch' = 'Choose language · [1] English  [2] German'
+    'Bitte eine angezeigte Zielnummer eingeben.' = 'Enter a target number shown above.'
+    'Das Modulverzeichnis ist bereits belegt: ' = 'The module directory is already in use: '
+    '. Lass das Skript an diesem Speicherort.' = '. Keep the script in this location.'
+    'Bitte den Pfad zu einer Datei eingeben.' = 'Enter a file path.'
+    'Schlüssel am neuen Port behalten? (j/n)' = 'Keep key on the new port? (y/n)'
+    'Export · Alle Ziele ohne SSH-Schlüssel.' = 'Export · All targets without SSH keys.'
+    'Erneute Schlüsselfreigabe abgebrochen.' = 'Key authorization canceled.'
+    '[N] Neu   [B] Bearbeiten   [L] Löschen' = '[N] New   [B] Edit   [L] Delete'
+    'Dieser Kurzname ist bereits vergeben.' = 'This short name is already in use.'
+    'Ungültiger öffentlicher Schlüssel in ' = 'Invalid public key in '
+    '). Details stehen in der SSH-Ausgabe.' = '). See SSH output for details.'
+    'Bitte einen einzelnen Wert eingeben.' = 'Enter a single value.'
+    'Kurzname passt nicht zum Dateinamen.' = 'Short name does not match the file name.'
+    'Anmeldung mit dem Schlüssel prüfen …' = 'Checking login with the key …'
+    '[S] Suchen   [I] Import   [E] Export' = '[S] Search   [I] Import   [E] Export'
+    'Bitte eine angezeigte Option wählen.' = 'Choose an option shown above.'
+    'Das Schlüsselpaar ist unvollständig.' = 'The key pair is incomplete.'
+    ' gespeicherten Zielen abgebrochen.' = 'saved targets.'
+    'Schlüsselerzeugung fehlgeschlagen.' = 'Key generation failed.'
+    'Ungültiger öffentlicher Schlüssel.' = 'Invalid public key.'
+    'Pfad zur JSON-Datei (Enter zurück)' = 'Path to JSON file (Enter to go back)'
+    'Ungültige Profildaten in Eintrag ' = 'Invalid profile data in entry '
+    'Schlüssel erneut freigeben? [j/N]' = 'Authorize key again? [y/N]'
+    'Passwortanmeldung fehlgeschlagen.' = 'Password login failed.'
+    'Kurzname passt nicht zur Datei.' = 'Short name does not match the file.'
+    'Bitte eine der Optionen wählen' = 'Choose one of the options'
+    'Vorhandenen Schlüssel prüfen …' = 'Checking existing key …'
+    'Bearbeiten · Nr (Enter zurück)' = 'Edit · No (Enter to go back)'
+    ' konnte nicht gelesen werden.' = ' could not be read.'
+    'Privater Schlüssel fehlt zu ' = 'Private key missing for '
+    'Löschen · Nr (Enter zurück)' = 'Delete · No (Enter to go back)'
+    'Keine SSH-Sitzung geöffnet.' = 'No SSH session was opened.'
+    'Privater Schlüssel fehlt: ' = 'Private key missing: '
+    '[O] Optionen   [Q] Beenden' = '[O] Options   [Q] Quit'
+    'Suche (Enter setzt zurück)' = 'Search (Enter to clear)'
+    'Privater Schlüssel fehlt.' = 'Private key missing.'
+    'Benötigter Befehl fehlt (' = 'Required command is missing ('
+    'Bearbeitung abgebrochen.' = 'Editing canceled.'
+    'Der Befehl verweist auf ' = 'The command points to '
+    'Keine Ziele zur Auswahl.' = 'No targets to select.'
+    'Ungültige Schlüssel-ID.' = 'Invalid key ID.'
+    'Import abgeschlossen · ' = 'Import complete · '
+    'Export abgeschlossen · ' = 'Export complete · '
+    'Sprache (Enter zurück)' = 'Language (Enter to go back)'
+    'Bitte 1 oder 2 wählen.' = 'Choose 1 or 2.'
+    'Ungültige Profildatei.' = 'Invalid profile file.'
+    'Ungültige Anmeldeart.' = 'Invalid login method.'
+    'SSH-Sitzung beendet.' = 'SSH session ended.'
+    'SSH beendet (Status ' = 'SSH exited (status '
+    'Ungültiger Kurzname.' = 'Invalid short name.'
+    'Ungültiger Benutzer.' = 'Invalid user.'
+    'Ziel löschen? [j/N]' = 'Delete target? [y/N]'
+    'Ziel bearbeiten · ' = 'Edit target · '
+    'Ungültiges Profil.' = 'Invalid profile.'
+    'Globaler Aufruf: ' = 'Global command: '
+    'Ungültiger Host.' = 'Invalid host.'
+    'Ungültiger Port.' = 'Invalid port.'
+    'Ziel löschen · ' = 'Delete target · '
+    'Neues SSH-Ziel' = 'New SSH target'
+    ''' gespeichert.' = ''' saved.'
+    '[Enter] Zurück' = '[Enter] Back'
+    ' übersprungen' = ' skipped'
+    ' gespeichert.' = ' saved.'
+    'Import nach ' = 'Import stopped after '
+    'Host oder IP' = 'Host or IP'
+    'SSH-Benutzer' = 'SSH user'
+    ''' gelöscht.' = ''' deleted.'
+    'SSH-Ziele (' = 'SSH targets ('
+    '[G] Sprache' = '[G] Language'
+    ' übernommen' = ' imported'
+    'Verbinde · ' = 'Connecting · '
+    'Verbindung' = 'Connection'
+    'Anmeldung' = 'Login'
+    'Verwaltet' = 'Managed'
+    'Fehler · ' = 'Error · '
+    'Eintrag ' = 'Entry '
+    'Kurzname' = 'Short name'
+    'Optionen' = 'Options'
+    'Suche "' = 'Search "'
+    'Suche „' = 'Search “'
+    'Auswahl' = 'Selection'
+    'Profil ' = 'Profile '
+    'Ziel ''' = 'Target '''
+    ' von ' = ' of '
+    'Nr' = 'No'
+}
+$script:TranslationKeys = @($script:English.Keys | Sort-Object Length -Descending)
+function Initialize-Language {
+    $script:Language = 'en'
+    $candidate = $env:SSH_MANAGER_LANG
+    if ($candidate -notin 'en', 'de') {
+        $path = Join-Path $store 'language'
+        if ([IO.File]::Exists($path)) { $candidate = [IO.File]::ReadAllText($path).Trim() }
+    }
+    if ($candidate -in 'en', 'de') { $script:Language = $candidate.ToLowerInvariant() }
+}
+function Translate-Text([string]$text) {
+    if ($script:Language -ne 'en') { return $text }
+    foreach ($key in $script:TranslationKeys) { $text = $text.Replace($key, $script:English[$key]) }
+    $text
+}
+function Set-Language([string]$value) {
+    if ($value -notin 'en', 'de') { throw 'Invalid language.' }
+    [void][IO.Directory]::CreateDirectory($store)
+    [IO.File]::WriteAllText((Join-Path $store 'language'), $value)
+    $script:Language = $value
+}
+Initialize-Language
+
 function Assert-TargetField($field, $value) {
     if ($value -is [array]) { throw 'Bitte einen einzelnen Wert eingeben.' }
     switch ($field) {
@@ -117,7 +269,7 @@ function Get-Targets {
                 $target | Add-Member FilePath $file.FullName
                 $target | Add-Member Snapshot $snapshot
             } catch {
-                Write-Warning "$($file.Name): $($_.Exception.Message)"
+                Write-Warning (Translate-Text "$($file.Name): $($_.Exception.Message)")
                 continue
             }
             $target
@@ -209,6 +361,7 @@ function Get-MenuWidth {
 }
 
 function Write-MenuText([string]$text, $width = (Get-MenuWidth), $color) {
+    $text = Translate-Text $text
     $style = @{}
     if ($color) { $style.ForegroundColor = $color }
     while ($text.Length -gt $width) {
@@ -221,6 +374,7 @@ function Write-MenuText([string]$text, $width = (Get-MenuWidth), $color) {
 }
 
 function Read-MenuInput($prompt, $width = (Get-MenuWidth)) {
+    $prompt = Translate-Text $prompt
     if ($prompt.Length + 2 -gt $width) {
         Write-MenuText $prompt $width
         $prompt = '>'
@@ -277,9 +431,9 @@ function Edit-Target($original) {
     $keepKey = $true
     if ($original -and $record.Login -eq 'Passwort' -and $record.Server -eq $original.Server -and
         $record.User -ceq $original.User -and [int]$record.Port -ne [int]$original.Port) {
-        $answer = Read-Field 'Schlüssel am neuen Port behalten? (j/n)' 'j' -choices @('j', 'n', 'ja', 'nein')
+        $answer = Read-Field 'Schlüssel am neuen Port behalten? (j/n)' 'j' -choices @('j', 'n', 'ja', 'nein', 'y', 'yes', 'no')
         if ($null -eq $answer) { return }
-        $keepKey = $answer -in 'j', 'ja'
+        $keepKey = $answer -in 'j', 'ja', 'y', 'yes'
     }
     Save-Target $record $original $keepKey
     Write-MenuText "Ziel '$($record.Name)' gespeichert."
@@ -322,7 +476,7 @@ function Install-TargetKey($key, $connection, $identity, $endpoint) {
             }
             Write-MenuText 'Die Anmeldung mit dem bisherigen Schlüssel konnte nicht bestätigt werden. Ein neuer Eintrag kann bestehende Schlüsselbeschränkungen umgehen.'
             $answer = Read-MenuInput 'Schlüssel erneut freigeben? [j/N]'
-            if ($answer -notin 'j', 'ja') { throw 'Erneute Schlüsselfreigabe abgebrochen.' }
+            if ($answer -notin 'j', 'ja', 'y', 'yes') { throw 'Erneute Schlüsselfreigabe abgebrochen.' }
         }
         $password = @('-o', 'PreferredAuthentications=password,keyboard-interactive', '-o', 'ControlPath=none')
         Write-MenuText 'Passwortanmeldung prüfen … Beim Erstkontakt den Host-Fingerabdruck abgleichen.'
@@ -421,7 +575,7 @@ function Initialize-GlobalCommand {
         $resolved = if ($command -is [System.Management.Automation.AliasInfo]) { $command.ResolvedCommand } else { $command }
         if ($resolved.Path -eq $PSCommandPath -or
             ($resolved.ModuleName -eq 'SSH-Manager' -and $resolved.Definition.Trim() -ceq $launch)) { return }
-        Write-Warning "Der Name SSH-Manager ist durch einen anderen Befehl belegt ($($command.CommandType)). Du kannst dieses Skript weiterhin direkt starten."
+        Write-Warning (Translate-Text "Der Name SSH-Manager ist durch einen anderen Befehl belegt ($($command.CommandType)). Du kannst dieses Skript weiterhin direkt starten.")
         return
     }
 
@@ -430,12 +584,12 @@ function Initialize-GlobalCommand {
     $launcher = "function SSH-Manager { $launch }"
     $installed = Join-Path $destination 'SSH-Manager.psm1'
     if ([IO.File]::Exists($installed) -and [IO.File]::ReadAllText($installed) -ceq $launcher) {
-        Write-Host 'Gib zuerst Import-Module SSH-Manager und danach SSH-Manager ein.'
+        Write-Host (Translate-Text 'Gib zuerst Import-Module SSH-Manager und danach SSH-Manager ein.')
         return
     }
-    Write-Host 'Mit dem Befehl SSH-Manager kannst du dieses Skript aus jedem Ordner starten.'
-    $choice = Read-Host 'Dafür einen Verweis im PowerShell-Modulverzeichnis deines Benutzerkontos anlegen? [j/N]'
-    if ($choice -notin 'j', 'ja') { return }
+    Write-Host (Translate-Text 'Mit dem Befehl SSH-Manager kannst du dieses Skript aus jedem Ordner starten.')
+    $choice = Read-Host (Translate-Text 'Dafür einen Verweis im PowerShell-Modulverzeichnis deines Benutzerkontos anlegen? [j/N]')
+    if ($choice -notin 'j', 'ja', 'y', 'yes') { return }
 
     if ([IO.Directory]::Exists($destination)) { throw "Das Modulverzeichnis ist bereits belegt: $destination" }
     $stage = Join-Path $root ([guid]::NewGuid().ToString())
@@ -451,10 +605,10 @@ function Initialize-GlobalCommand {
         }
     }
     if (-not (Get-Command SSH-Manager -ErrorAction SilentlyContinue)) {
-        Write-Host 'Lade das Modul in jeder neuen Sitzung zuerst mit Import-Module SSH-Manager.'
+        Write-Host (Translate-Text 'Lade das Modul in jeder neuen Sitzung zuerst mit Import-Module SSH-Manager.')
     }
-    Write-Host 'Gib künftig in PowerShell in einem beliebigen Ordner SSH-Manager ein und drücke Enter.'
-    Write-Host "Der Befehl verweist auf $PSCommandPath. Lass das Skript an diesem Speicherort."
+    Write-Host (Translate-Text 'Gib künftig in PowerShell in einem beliebigen Ordner SSH-Manager ein und drücke Enter.')
+    Write-Host (Translate-Text "Der Befehl verweist auf $PSCommandPath. Lass das Skript an diesem Speicherort.")
 }
 
 function Format-TargetAddress($target) {
@@ -472,8 +626,11 @@ function Show-TargetMenu($targets, $total, $filter, $width) {
 
     if ($targets.Count) {
         $numberWidth = [Math]::Max(2, "$($targets.Count)".Length)
-        $nameWidth = 'Kurzname'.Length
-        $addressWidth = 'Verbindung'.Length
+        $nameHeading = Translate-Text 'Kurzname'
+        $addressHeading = Translate-Text 'Verbindung'
+        $loginHeading = Translate-Text 'Anmeldung'
+        $nameWidth = $nameHeading.Length
+        $addressWidth = $addressHeading.Length
         $rows = for ($i = 0; $i -lt $targets.Count; $i++) {
             $target = $targets[$i]
             $name = [string]$target.Name
@@ -484,14 +641,15 @@ function Show-TargetMenu($targets, $total, $filter, $width) {
                 Number = [string]($i + 1)
                 Name = $name
                 Address = $address
-                Login = if ($target.Login -eq 'Passwort') { 'Verwaltet' } else { 'OpenSSH' }
+                Login = if ($target.Login -eq 'Passwort') { Translate-Text 'Verwaltet' } else { 'OpenSSH' }
                 Target = $target
             }
         }
-        $tableWidth = $numberWidth + $nameWidth + $addressWidth + 'Anmeldung'.Length + 6
+        $numberWidth = [Math]::Max($numberWidth, (Translate-Text 'Nr').Length)
+        $tableWidth = $numberWidth + $nameWidth + $addressWidth + $loginHeading.Length + 6
         if ($width -ge 68 -and $tableWidth -le $width) {
-            Write-Host ('{0}  {1}  {2}  Anmeldung' -f 'Nr'.PadLeft($numberWidth),
-                'Kurzname'.PadRight($nameWidth), 'Verbindung'.PadRight($addressWidth))
+            Write-Host ('{0}  {1}  {2}  {3}' -f (Translate-Text 'Nr').PadLeft($numberWidth),
+                $nameHeading.PadRight($nameWidth), $addressHeading.PadRight($addressWidth), $loginHeading)
             Write-Host ('─' * $tableWidth)
             foreach ($row in $rows) {
                 Write-Host ('{0}  {1}  {2}  {3}' -f $row.Number.PadLeft($numberWidth),
@@ -532,12 +690,13 @@ function Read-ManagerOption($width) {
     Write-MenuText 'Optionen' $width Cyan
     Write-MenuText '[N] Neu   [B] Bearbeiten   [L] Löschen' $width
     Write-MenuText '[S] Suchen   [I] Import   [E] Export' $width
+    Write-MenuText '[G] Sprache' $width
     Write-MenuText '[Enter] Zurück' $width
     while ($true) {
         $inputText = Read-MenuInput 'Option' $width
         if ($null -eq $inputText) { return }
         $action = $inputText.Trim()
-        if ($action -in '', 'N', 'B', 'L', 'S', 'I', 'E') { return $action }
+        if ($action -in '', 'N', 'B', 'L', 'S', 'I', 'E', 'G') { return $action }
         Write-MenuText 'Bitte eine angezeigte Option wählen.' $width
     }
 }
@@ -572,6 +731,17 @@ function Start-Manager {
                 if ($null -eq $action) { return }
                 $refresh = $true
                 if ($action -eq '') { continue }
+            }
+            if ($action -eq 'G') {
+                Write-MenuText 'Sprache wählen · [1] Englisch  [2] Deutsch' $width Cyan
+                $languageChoice = Read-MenuInput 'Sprache (Enter zurück)' $width
+                if ($null -eq $languageChoice) { return }
+                if ($languageChoice -in '1', '2') {
+                    Set-Language $(if ($languageChoice -eq '1') { 'en' } else { 'de' })
+                } elseif ($languageChoice.Trim()) {
+                    Write-MenuText 'Bitte 1 oder 2 wählen.' $width
+                }
+                continue
             }
             if ($action -eq 'N') { Edit-Target; continue }
             if ($action -eq 'S') {
@@ -622,7 +792,7 @@ function Start-Manager {
                     Write-MenuText (Format-TargetAddress $target) $width
                     Write-MenuText 'Lokale Schlüssel und Serverfreigaben bleiben erhalten.' $width
                     $confirm = Read-MenuInput 'Ziel löschen? [j/N]' $width
-                    if ($confirm -in 'j', 'ja') {
+                    if ($confirm -in 'j', 'ja', 'y', 'yes') {
                         Remove-Target $target
                         Write-MenuText "Ziel '$($target.Name)' gelöscht." $width
                     }
@@ -641,6 +811,6 @@ function Start-Manager {
 }
 
 if ($MyInvocation.InvocationName -ne '.') {
-    try { Initialize-GlobalCommand } catch { Write-Warning "Globaler Aufruf: $($_.Exception.Message)" }
+    try { Initialize-GlobalCommand } catch { Write-Warning (Translate-Text "Globaler Aufruf: $($_.Exception.Message)") }
     Start-Manager
 }
