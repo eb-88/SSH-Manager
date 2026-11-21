@@ -11,10 +11,10 @@ Mit SSH-Manager speicherst du deine SSH-Ziele in einem Terminalmenü. Das Tool l
 Du brauchst Bash ab 4.4, Git, `jq` ab 1.6, den OpenSSH-Client und `flock` aus util-linux. Unter Debian und Ubuntu kannst du fehlende Pakete mit `sudo apt install git jq openssh-client util-linux` installieren.
 
 ```bash
-git clone --depth 1 https://github.com/eb-88/SSH-Manager.git "$HOME/.local/share/ssh-manager" && install -Dm755 "$HOME/.local/share/ssh-manager/ssh-manager.sh" "$HOME/.local/bin/ssh-manager"
+git clone --depth 1 https://github.com/eb-88/SSH-Manager.git "$HOME/.local/share/ssh-manager" && install -Dm755 "$HOME/.local/share/ssh-manager/ssh-manager.sh" "$HOME/.local/bin/ssh-manager" && "$HOME/.local/bin/ssh-manager"
 ```
 
-Starte mit `~/.local/bin/ssh-manager`. Wenn `~/.local/bin` in deinem `PATH` steht, reicht `ssh-manager`.
+Für spätere Starts kannst du `~/.local/bin/ssh-manager` verwenden. Wenn `~/.local/bin` in deinem `PATH` steht, reicht `ssh-manager`.
 
 ### PowerShell
 
