@@ -689,21 +689,21 @@ show_targets() {
     done
     if (($#)); then
         printf '\n'
-        menu_text '[Nr] Verbinden   [O] Optionen   [Q] Beenden'
+        menu_text '[Nr] Verbinden   [O] Optionen   [Q] Beenden'
     else
         if [[ -n $filter ]]; then menu_text 'Keine Treffer. Suche unter Optionen ändern.'; else menu_text 'Noch keine Ziele. Unter Optionen kannst du Ziele anlegen oder importieren.'; fi
         printf '\n'
-        menu_text '[O] Optionen   [Q] Beenden'
+        menu_text '[O] Optionen   [Q] Beenden'
     fi
 }
 
 read_option() {
     printf '\n'
     menu_text Optionen
-    menu_text '[N] Neu   [B] Bearbeiten   [L] Löschen'
-    menu_text '[S] Suchen   [I] Import   [E] Export'
-    menu_text '[G] Sprache'
-    menu_text '[Enter] Zurück'
+    menu_text '[N] Neu   [B] Bearbeiten   [L] Löschen'
+    menu_text '[S] Suchen   [I] Import   [E] Export'
+    menu_text '[G] Sprache'
+    menu_text '[Enter] Zurück'
     while ask Option; do
         case ${REPLY,,} in ''|n|b|l|s|i|e|g) return 0 ;; esac
         menu_text 'Bitte eine angezeigte Option wählen.'
@@ -856,20 +856,20 @@ show_targets() {
     done
     if (($#)); then
         printf '\n'
-        menu_text '[Nr] Verbinden   [O] Optionen   [Q] Beenden'
+        menu_text '[Nr] Verbinden   [O] Optionen   [Q] Beenden'
     else
         if [[ -n $filter ]]; then menu_text 'Keine Treffer. Suche unter Optionen ändern.'; else menu_text 'Noch keine Ziele. Unter Optionen kannst du Ziele anlegen oder importieren.'; fi
         printf '\n'
-        menu_text '[O] Optionen   [Q] Beenden'
+        menu_text '[O] Optionen   [Q] Beenden'
     fi
 }
 
 read_option() {
     printf '\n'
     menu_text Optionen
-    menu_text '[N] Neu   [B] Bearbeiten   [L] Löschen'
-    menu_text '[S] Suchen   [I] Import   [E] Export'
-    menu_text '[Enter] Zurück'
+    menu_text '[N] Neu   [B] Bearbeiten   [L] Löschen'
+    menu_text '[S] Suchen   [I] Import   [E] Export'
+    menu_text '[Enter] Zurück'
     while ask Option; do
         case ${REPLY,,} in ''|n|b|l|s|i|e) return 0 ;; esac
         menu_text 'Bitte eine angezeigte Option wählen.'
