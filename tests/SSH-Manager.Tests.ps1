@@ -321,14 +321,22 @@ try {
     $script:fakeRelease = 'v0.4.0'
     $answers = [Collections.Queue]::new(@('n'))
     Test-ManagerUpdate
-    Assert ($answers.Count -eq 0) 'Update decline was not read.'
+    Assert ($answers.Count -eq 0 -and $script:AvailableUpdateVersion -eq '0.4.0') 'Declining an update must keep the outdated status.'
+    $screen.Clear()
+    Show-TargetMenu @(Get-Targets) @(Get-Targets).Count '' 40
+    Assert (($screen -join ' ') -match 'SSH-Manager · v0.3.1' -and ($screen -join ' ') -match 'Veraltete Version! Update v0.4.0 verfügbar') 'Version and outdated notice missing in German menu.'
+    $script:Language = 'en'
+    $screen.Clear()
+    Show-TargetMenu @(Get-Targets) @(Get-Targets).Count '' 40
+    Assert (($screen -join ' ') -match 'Outdated version! Update v0.4.0 available') 'Outdated notice missing in English menu.'
+    $script:Language = 'de'
     $script:fakeRelease = 'v0.3.1'
     $answers = [Collections.Queue]::new(@('n'))
     Test-ManagerUpdate
-    Assert ($answers.Count -eq 1) 'The current release prompted for installation.'
+    Assert ($answers.Count -eq 1 -and -not $script:AvailableUpdateVersion) 'The current release prompted for installation or showed as outdated.'
     $script:fakeRelease = 'preview'
     Test-ManagerUpdate
-    Assert ($answers.Count -eq 1) 'Invalid release tag prompted for installation.'
+    Assert ($answers.Count -eq 1 -and -not $script:AvailableUpdateVersion) 'Invalid release tag prompted or marked outdated.'
     Write-Output 'Alle Tests bestanden.'
 } finally {
     foreach ($file in [IO.Directory]::GetFiles($store)) { [IO.File]::Delete($file) }
