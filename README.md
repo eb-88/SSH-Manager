@@ -14,7 +14,7 @@ Requires Bash 4.4 or later, Git, `jq` 1.6 or later, `curl`, the OpenSSH client, 
 curl -fsSL https://raw.githubusercontent.com/eb-88/SSH-Manager/main/install.sh | bash
 ```
 
-Running the installation command again detects the existing checkout and asks before updating it. If you decline, no files are changed. A failed Git pull does not overwrite existing files. To start it again, run `~/.local/bin/ssh-manager`, or use `ssh-manager`, `sshm`, or `SSHM` when `~/.local/bin` is on your `PATH`. The short commands point to the same executable.
+Running the installation command again detects the existing checkout and asks before updating it. If you decline, no files are changed. A failed Git pull does not overwrite existing files. To start it again, run `~/.local/bin/ssh-manager`, or use `ssh-manager`, `sshm`, or `SSHM` when `~/.local/bin` is on your `PATH`. The short commands point to the same executable. If you updated `ssh-manager` through its built-in updater rather than rerunning the installer, the new Linux script creates any missing `sshm`/`SSHM` shortcuts automatically on its next launch; existing unrelated commands are not overwritten.
 
 ### PowerShell
 
