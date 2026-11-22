@@ -11,17 +11,17 @@ Mit SSH-Manager speicherst du deine SSH-Ziele in einem Terminalmenü. Das Tool l
 Du brauchst Bash ab 4.4, Git, `jq` ab 1.6, `curl`, den OpenSSH-Client und `flock` aus util-linux. Unter Debian und Ubuntu kannst du fehlende Pakete mit `sudo apt install git jq curl openssh-client util-linux` installieren.
 
 ```bash
-git clone --depth 1 https://github.com/eb-88/SSH-Manager.git "$HOME/.local/share/ssh-manager" && install -Dm755 "$HOME/.local/share/ssh-manager/ssh-manager.sh" "$HOME/.local/bin/ssh-manager" && "$HOME/.local/bin/ssh-manager"
+curl -fsSL https://raw.githubusercontent.com/eb-88/SSH-Manager/main/install.sh | bash
 ```
 
 Für spätere Starts kannst du `~/.local/bin/ssh-manager` verwenden. Wenn `~/.local/bin` in deinem `PATH` steht, reicht `ssh-manager`.
 
-### PowerShell
+Beim erneuten Ausführen des Installationsbefehls wird eine vorhandene Installation erkannt. Ein Update erfolgt nur nach Bestätigung (`y` oder `j`); bei Ablehnung bleiben die vorhandenen Dateien unverändert.\n\n### PowerShell
 
 Du brauchst Windows PowerShell 5.1 oder PowerShell 7, Git und die OpenSSH-Befehle `ssh` und `ssh-keygen`.
 
 ```powershell
-git clone --depth 1 https://github.com/eb-88/SSH-Manager.git "$HOME/SSH-Manager"; if ($LASTEXITCODE -eq 0) { & "$HOME/SSH-Manager/SSH-Manager.ps1" }
+irm https://raw.githubusercontent.com/eb-88/SSH-Manager/main/install.ps1 | iex
 ```
 
 Bestätige beim ersten Start mit **y** (oder **j**), damit du `SSH-Manager` aus jedem Ordner aufrufen kannst. Lass den Installationsordner an seinem Platz, damit der Befehl das Skript findet.
