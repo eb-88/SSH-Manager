@@ -25,3 +25,16 @@ jobs:
       - name: PowerShell global launcher and updater regression tests
         shell: pwsh
         run: ./tests/GlobalCommand.Tests.ps1
+
+  windows-launcher:
+    name: Windows PowerShell shortcut regression
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: PowerShell 7 shortcut and module migration
+        shell: pwsh
+        run: ./tests/GlobalCommand.Tests.ps1
+      - name: Windows PowerShell 5.1 shortcut and module migration
+        shell: powershell
+        run: ./tests/GlobalCommand.Tests.ps1
