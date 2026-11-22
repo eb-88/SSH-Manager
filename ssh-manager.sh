@@ -798,7 +798,7 @@ filter_records() {
               .Server, .User, (.Port | tostring), .Login,
               (if .Login == "Passwort" then "Verwaltet Managed" else "OpenSSH" end)]
              | join(" ") | ascii_downcase) as $text
-            | all($terms[]; $text | contains(.))
+            | all($terms[]; . as $term | $text | contains($term))
         )' <<< "$1"
 }
 
