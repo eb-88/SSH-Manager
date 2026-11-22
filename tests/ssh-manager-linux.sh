@@ -112,3 +112,45 @@ check grep -F 'Sprache wählen' "$screen"
 check grep -Fx en "$store/language"
 check jq -es 'length == 1 and .[0].Login == "Schlüssel"' "$store"/ziel-*.json
 printf 'Linux-Tests bestanden.\n'
+
+# Self-update tests: fake GitHub responses and validate installed file replacement.
+manager_script="$scratch/install/ssh-manager.sh"
+mkdir -p -- "${manager_script%/*}"
+printf '#!/usr/bin/env bash\nmanager_version=0.3.0\n' > "$manager_script"
+chmod 755 "$manager_script"
+release_tag=v0.4.0
+download_version=0.4.0
+curl() {
+    local output='' previous='' value
+    if [[ " $* " == *'/releases/latest'* ]]; then
+        printf '{"tag_name":"%s"}\n' "$release_tag"
+        return 0
+    fi
+    for value in "$@"; do
+        if [[ $previous == -o ]]; then output=$value; break; fi
+        previous=$value
+    done
+    [[ -n $output ]] || return 1
+    printf '#!/usr/bin/env bash\nmanager_version=%s\n' "$download_version" > "$output"
+}
+language=en
+check_update <<< n > "$screen"
+check grep -F 'available' "$screen"
+check grep -Fx manager_version=0.3.0 "$manager_script"
+download_version=0.5.0
+check_update <<< y > "$screen"
+check grep -F 'Update failed' "$screen"
+check grep -Fx manager_version=0.3.0 "$manager_script"
+download_version=0.4.0
+check_update <<< y > "$screen"
+check grep -F 'Installed v0.4.0' "$screen"
+check grep -Fx manager_version=0.4.0 "$manager_script"
+release_tag=v0.3.0
+check_update > "$screen"
+check test ! -s "$screen"
+release_tag=v0.5.0
+curl() { return 28; }
+check_update > "$screen"
+check test ! -s "$screen"
+check grep -Fx manager_version=0.4.0 "$manager_script"
+printf 'Update-Tests bestanden.\n'

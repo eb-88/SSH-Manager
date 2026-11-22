@@ -8,7 +8,7 @@ Mit SSH-Manager speicherst du deine SSH-Ziele in einem Terminalmenü. Das Tool l
 
 ### Linux
 
-Du brauchst Bash ab 4.4, Git, `jq` ab 1.6, den OpenSSH-Client und `flock` aus util-linux. Unter Debian und Ubuntu kannst du fehlende Pakete mit `sudo apt install git jq openssh-client util-linux` installieren.
+Du brauchst Bash ab 4.4, Git, `jq` ab 1.6, `curl`, den OpenSSH-Client und `flock` aus util-linux. Unter Debian und Ubuntu kannst du fehlende Pakete mit `sudo apt install git jq curl openssh-client util-linux` installieren.
 
 ```bash
 git clone --depth 1 https://github.com/eb-88/SSH-Manager.git "$HOME/.local/share/ssh-manager" && install -Dm755 "$HOME/.local/share/ssh-manager/ssh-manager.sh" "$HOME/.local/bin/ssh-manager" && "$HOME/.local/bin/ssh-manager"
@@ -58,3 +58,8 @@ Mit **O** öffnest du das Menü `Optionen`. **Enter** bringt dich von dort zurü
 PowerShell und Bash verwenden dasselbe JSON-Exportformat. Die Datei enthält Kurznamen, Hosts, Benutzernamen, Ports und Anmeldearten. Öffentliche und private Schlüssel, Passwörter, lokale Schlüsselzuordnungen und OpenSSH-Konfiguration bleiben auf dem ursprünglichen Gerät. Beim ersten Verbinden mit einem importierten Ziel richtet der Manager bei Bedarf einen neuen verwalteten Schlüssel ein. Ziele mit der Anmeldeart **OpenSSH** verwenden die Konfiguration des aktuellen Rechners.
 
 Die Zielprofile liegen als `ziel-*.json` in `~/.ssh/ssh-manager/` in deinem Benutzerverzeichnis. Im selben Ordner liegen die vom Manager erzeugten Schlüssel. Serverpasswörter werden nicht gespeichert. Beim Löschen eines Ziels bleiben die lokalen Schlüsseldateien und die zugehörige Zugriffsberechtigung auf dem Server erhalten.
+
+
+## Updates
+
+Bei jedem Start prüft SSH Manager das neueste stabile GitHub-Release und fragt vor der Installation. Die neue Version wird beim nächsten Start aktiv. SSH-Ziele und Schlüssel bleiben erhalten. Das Skriptverzeichnis muss beschreibbar sein; Bash verwendet `curl` und GNU `sort`.

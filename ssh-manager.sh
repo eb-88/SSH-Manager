@@ -6,6 +6,50 @@ umask 077
 store="$HOME/.ssh/ssh-manager"
 width=80
 
+# Must match the latest published stable release when tagging a new version.
+manager_version=0.3.0
+manager_script=${BASH_SOURCE[0]}
+
+check_update() {
+    local release tag version latest answer dest temporary url
+    release=$(curl -fsSL --max-time 5 -H 'Accept: application/vnd.github+json' -H 'User-Agent: SSH-Manager' 'https://api.github.com/repos/eb-88/SSH-Manager/releases/latest' 2>/dev/null) || return 0
+    tag=$(jq -r '.tag_name // ""' <<< "$release" 2>/dev/null) || return 0
+    [[ $tag =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]] || return 0
+    version=${tag#v}
+    latest=$(printf '%s\n%s\n' "$manager_version" "$version" | sort -V | tail -n 1)
+    [[ $latest == "$version" && $version != "$manager_version" ]] || return 0
+    if [[ $language == de ]]; then
+        ask "Version v$version verfügbar (installiert: v$manager_version). Jetzt installieren? [j/N]" || return 0
+    else
+        ask "Version v$version available (installed: v$manager_version). Install now? [y/N]" || return 0
+    fi
+    answer=${REPLY,,}
+    [[ $answer == y || $answer == yes || $answer == j || $answer == ja ]] || return 0
+    dest=$manager_script
+    [[ $dest == /* ]] || dest="$PWD/$dest"
+    temporary=$(mktemp -- "${dest%/*}/.ssh-manager-update.XXXXXXXX") || return 0
+    url="https://raw.githubusercontent.com/eb-88/SSH-Manager/$tag/ssh-manager.sh"
+    if curl -fsSL --max-time 15 -o "$temporary" "$url" 2>/dev/null &&
+        grep -Fxq "manager_version=$version" "$temporary" &&
+        bash -n "$temporary" &&
+        chmod --reference="$dest" "$temporary" &&
+        mv -f -- "$temporary" "$dest"; then
+        if [[ $language == de ]]; then
+            menu_text "Version v$version installiert. Beim nächsten Start aktiv."
+        else
+            menu_text "Installed v$version. It will run on the next launch."
+        fi
+    else
+        if [[ $language == de ]]; then
+            menu_text 'Update fehlgeschlagen. Die bisherige Version bleibt erhalten.'
+        else
+            menu_text 'Update failed. The existing version was kept.'
+        fi
+    fi
+    rm -f -- "$temporary"
+}
+
+
 # Display-only localization. Saved profile values stay compatible.
 language=en
 translation_from=(
@@ -807,7 +851,9 @@ main() {
     for dependency in jq ssh ssh-keygen flock; do
         command -v "$dependency" >/dev/null || { fail "Benötigter Befehl fehlt ($dependency)."; return 1; }
     done
-    mkdir -p -- "$store" && start_manager
+    mkdir -p -- "$store" || return 1
+    check_update
+    start_manager
 }
 
 if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
