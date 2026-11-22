@@ -14,7 +14,7 @@ Du brauchst Bash ab 4.4, Git, `jq` ab 1.6, `curl`, den OpenSSH-Client und `flock
 curl -fsSL https://raw.githubusercontent.com/eb-88/SSH-Manager/main/install.sh | bash
 ```
 
-Für spätere Starts kannst du `~/.local/bin/ssh-manager` verwenden. Wenn `~/.local/bin` in deinem `PATH` steht, funktionieren `ssh-manager`, `sshm` und `SSHM` gleichwertig.
+Für spätere Starts kannst du `~/.local/bin/ssh-manager` verwenden. Wenn `~/.local/bin` in deinem `PATH` steht, funktionieren `ssh-manager`, `sshm` und `SSHM` gleichwertig. Nach einem Update über die integrierte Updatefunktion legt das aktualisierte Linux-Skript beim nächsten Start fehlende Kurzbefehle automatisch an, ohne bestehende fremde Befehle zu überschreiben.
 
 Beim erneuten Ausführen des Installationsbefehls wird eine vorhandene Installation erkannt. Ein Update erfolgt nur nach Bestätigung (`y` oder `j`); bei Ablehnung bleiben die vorhandenen Dateien unverändert.
 
