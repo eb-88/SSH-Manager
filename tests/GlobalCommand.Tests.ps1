@@ -33,13 +33,13 @@ try {
             Microsoft.PowerShell.Management\Test-Path @PSBoundParameters
         }
         function Read-Host($Prompt) {
-            if ($Prompt -ne 'Auswahl') { exit 12 }
+            if ($Prompt -notin 'Auswahl', 'Selection') { exit 12 }
             'Q'
         }
         SSH-Manager
     }
     $output = & (Get-Process -Id $PID).Path -NoProfile -Command $check
-    if ($LASTEXITCODE -ne 0 -or ($output -join ' ') -notmatch 'SSH-Ziele') { throw 'Start in einer neuen PowerShell fehlgeschlagen.' }
+    if ($LASTEXITCODE -ne 0 -or ($output -join ' ') -notmatch 'SSH (targets|Ziele)') { throw 'Start in einer neuen PowerShell fehlgeschlagen.' }
     # Reproduce updating a script invoked through the global PowerShell command.
     if ($script:ManagerScriptPath -cne $source) { throw 'The script path was lost after dot-sourcing.' }
     $answers = [Collections.Queue]::new(@('y'))
