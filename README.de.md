@@ -16,13 +16,17 @@ curl -fsSL https://raw.githubusercontent.com/eb-88/SSH-Manager/main/install.sh |
 
 Für spätere Starts kannst du `~/.local/bin/ssh-manager` verwenden. Wenn `~/.local/bin` in deinem `PATH` steht, reicht `ssh-manager`.
 
-Beim erneuten Ausführen des Installationsbefehls wird eine vorhandene Installation erkannt. Ein Update erfolgt nur nach Bestätigung (`y` oder `j`); bei Ablehnung bleiben die vorhandenen Dateien unverändert.\n\n### PowerShell
+Beim erneuten Ausführen des Installationsbefehls wird eine vorhandene Installation erkannt. Ein Update erfolgt nur nach Bestätigung (`y` oder `j`); bei Ablehnung bleiben die vorhandenen Dateien unverändert.
+
+### PowerShell
 
 Du brauchst Windows PowerShell 5.1 oder PowerShell 7, Git und die OpenSSH-Befehle `ssh` und `ssh-keygen`.
 
 ```powershell
 irm https://raw.githubusercontent.com/eb-88/SSH-Manager/main/install.ps1 | iex
 ```
+
+Auch unter PowerShell fragt der Installationsbefehl bei einer vorhandenen Installation vor einem Update nach.
 
 Bestätige beim ersten Start mit **y** (oder **j**), damit du `SSH-Manager` aus jedem Ordner aufrufen kannst. Lass den Installationsordner an seinem Platz, damit der Befehl das Skript findet.
 
