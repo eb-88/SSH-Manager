@@ -52,9 +52,13 @@ try {
             if ($Prompt -notin 'Auswahl', 'Selection') { exit 12 }
             'Q'
         }
+        Write-Output "Pre: $((Get-Command SSH-Manager).CommandType)/$((Get-Command SSH-Manager).ModuleName); $((Get-Command SSHM).CommandType)/$((Get-Command SSHM).ModuleName)"
         SSH-Manager
+        Write-Output 'After SSH-Manager'
         SSHM
+        Write-Output 'After SSHM'
         sshm
+        Write-Output 'After sshm'
     }
     $output = & (Get-Process -Id $PID).Path -NoProfile -Command $check
     if ($LASTEXITCODE -ne 0 -or @($output | Where-Object { $_ -match 'SSH (targets|Ziele)' }).Count -ne 3) {
