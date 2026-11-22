@@ -14,7 +14,7 @@ Du brauchst Bash ab 4.4, Git, `jq` ab 1.6, `curl`, den OpenSSH-Client und `flock
 curl -fsSL https://raw.githubusercontent.com/eb-88/SSH-Manager/main/install.sh | bash
 ```
 
-Für spätere Starts kannst du `~/.local/bin/ssh-manager` verwenden. Wenn `~/.local/bin` in deinem `PATH` steht, reicht `ssh-manager`.
+Für spätere Starts kannst du `~/.local/bin/ssh-manager` verwenden. Wenn `~/.local/bin` in deinem `PATH` steht, funktionieren `ssh-manager`, `sshm` und `SSHM` gleichwertig.
 
 Beim erneuten Ausführen des Installationsbefehls wird eine vorhandene Installation erkannt. Ein Update erfolgt nur nach Bestätigung (`y` oder `j`); bei Ablehnung bleiben die vorhandenen Dateien unverändert.
 
@@ -28,7 +28,7 @@ irm https://raw.githubusercontent.com/eb-88/SSH-Manager/main/install.ps1 | iex
 
 Auch unter PowerShell fragt der Installationsbefehl bei einer vorhandenen Installation vor einem Update nach.
 
-Bestätige beim ersten Start mit **y** (oder **j**), damit du `SSH-Manager` aus jedem Ordner aufrufen kannst. Lass den Installationsordner an seinem Platz, damit der Befehl das Skript findet.
+Bestätige beim ersten Start mit **y** (oder **j**), damit du `SSH-Manager` aus jedem Ordner aufrufen kannst. Zusätzlich stehen `SSHM` und `sshm` als Kurzaufrufe zur Verfügung (PowerShell unterscheidet nicht zwischen Groß- und Kleinschreibung). Bestehende Module werden beim nächsten Start des aktualisierten Skripts ergänzt; starte PowerShell neu, damit der neue Befehl erkannt wird. Lass den Installationsordner an seinem Platz, damit die Befehle das Skript finden.
 
 ## Sprache im Terminal
 

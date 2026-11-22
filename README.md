@@ -14,7 +14,7 @@ Requires Bash 4.4 or later, Git, `jq` 1.6 or later, `curl`, the OpenSSH client, 
 curl -fsSL https://raw.githubusercontent.com/eb-88/SSH-Manager/main/install.sh | bash
 ```
 
-Running the installation command again detects the existing checkout and asks before updating it. If you decline, no files are changed. A failed Git pull does not overwrite existing files. To start it again, run `~/.local/bin/ssh-manager`, or just `ssh-manager` if `~/.local/bin` is on your `PATH`.
+Running the installation command again detects the existing checkout and asks before updating it. If you decline, no files are changed. A failed Git pull does not overwrite existing files. To start it again, run `~/.local/bin/ssh-manager`, or use `ssh-manager`, `sshm`, or `SSHM` when `~/.local/bin` is on your `PATH`. The short commands point to the same executable.
 
 ### PowerShell
 
@@ -24,7 +24,7 @@ Requires Windows PowerShell 5.1 or PowerShell 7, Git, and the OpenSSH commands `
 irm https://raw.githubusercontent.com/eb-88/SSH-Manager/main/install.ps1 | iex
 ```
 
-Running the installation command again offers an update of the existing checkout (only after confirmation). When prompted on first installation, enter **j** to register `SSH-Manager` for your account. Keep the installed folder in place so the command can find the script.
+Running the installation command again offers an update of the existing checkout (only after confirmation). When prompted on first installation, enter **j** to register `SSH-Manager` for your account. You can then also run `SSHM` or `sshm` (PowerShell commands are case-insensitive). Existing launcher modules gain the short command when you next run the updated script; reopen PowerShell to pick it up. Keep the installed folder in place so the commands can find the script.
 
 ## Updates
 

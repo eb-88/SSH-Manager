@@ -19,11 +19,27 @@ try {
     Initialize-GlobalCommand
     if ((Get-Command SSH-Manager).Definition -ne 'Get-Date' -or $answers.Count -ne 2) { throw 'Namenskonflikt übergangen.' }
     Remove-Item -LiteralPath Alias:SSH-Manager
+    Set-Alias -Name SSHM -Value Get-Date -Scope Local
+    Initialize-GlobalCommand
+    if ((Get-Command SSHM).Definition -ne 'Get-Date' -or [IO.Directory]::Exists($modules)) {
+        throw 'Existing SSHM command was overwritten.'
+    }
+    Remove-Item -LiteralPath Alias:SSHM
     Initialize-GlobalCommand
     if ([IO.Directory]::Exists($modules)) { throw 'Modul trotz Ablehnung angelegt.' }
     Initialize-GlobalCommand
     Initialize-GlobalCommand
-    if (-not [IO.File]::Exists($installed) -or $answers.Count -ne 0) { throw 'Globaler Aufruf wurde nicht eingerichtet.' }
+    if (-not [IO.File]::Exists($installed) -or $answers.Count -ne 0 -or
+        -not [IO.File]::ReadAllText($installed).Contains('function SSHM')) {
+        throw 'Globaler Aufruf oder Kurzaufruf wurde nicht eingerichtet.'
+    }
+    # Existing users already have the legacy module. Extend it without re-prompting.
+    $legacy = ([IO.File]::ReadAllText($installed) -split "`n")[0]
+    [IO.File]::WriteAllText($installed, $legacy)
+    Initialize-GlobalCommand
+    if (-not [IO.File]::ReadAllText($installed).Contains('function SSHM')) {
+        throw 'Existing PowerShell module was not upgraded with the SSHM shortcut.'
+    }
 
     # Ohne Profil und außerhalb des Skriptordners muss allein die Zieleauswahl erscheinen.
     Set-Location -LiteralPath $modules
@@ -37,9 +53,13 @@ try {
             'Q'
         }
         SSH-Manager
+        SSHM
+        sshm
     }
     $output = & (Get-Process -Id $PID).Path -NoProfile -Command $check
-    if ($LASTEXITCODE -ne 0 -or ($output -join ' ') -notmatch 'SSH (targets|Ziele)') { throw 'Start in einer neuen PowerShell fehlgeschlagen.' }
+    if ($LASTEXITCODE -ne 0 -or @($output | Where-Object { $_ -match 'SSH (targets|Ziele)' }).Count -ne 3) {
+        throw "Global launcher failed (exit $LASTEXITCODE; output: $($output -join ' | '))."
+    }
     # Reproduce updating a script invoked through the global PowerShell command.
     if ($script:ManagerScriptPath -cne $source) { throw 'The script path was lost after dot-sourcing.' }
     $answers = [Collections.Queue]::new(@('y'))

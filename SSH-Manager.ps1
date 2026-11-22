@@ -69,6 +69,7 @@ $script:English = @{
     'Die Datei existiert bereits. Bitte einen anderen Dateinamen wählen.' = 'The file already exists. Choose another file name.'
     'Ein neuer Eintrag kann bestehende Schlüsselbeschränkungen umgehen.' = 'A new entry could bypass key restrictions.'
     'Gib zuerst Import-Module SSH-Manager und danach SSH-Manager ein.' = 'Run Import-Module SSH-Manager, then SSH-Manager.'
+    'Der Kurzaufruf SSHM ist eingerichtet.' = 'The SSHM shortcut is configured.'
     'Bitte eine gültige SSH-Manager-Exportdatei (Version 1) wählen.' = 'Select a valid SSH-Manager export file (version 1).'
     'Erlaubt sind 1–64 Zeichen: Buchstaben, Zahlen, Punkt, _ und -.' = 'Allowed: 1–64 characters: letters, digits, period, _ and -.'
     'Der Speicher ist gerade in Benutzung. Bitte erneut versuchen.' = 'The store is in use. Please retry.'
@@ -632,21 +633,45 @@ function Get-UserModuleDirectory {
 function Initialize-GlobalCommand {
     $escapedPath = [System.Management.Automation.Language.CodeGeneration]::EscapeSingleQuotedStringContent($script:ManagerScriptPath)
     $launch = "& '$escapedPath'"
+    $legacyLauncher = "function SSH-Manager { $launch }"
+    $launcher = "$legacyLauncher`nfunction SSHM { $launch }"
     $command = Get-Command SSH-Manager -ErrorAction SilentlyContinue
     if ($command) {
         $resolved = if ($command -is [System.Management.Automation.AliasInfo]) { $command.ResolvedCommand } else { $command }
-        if ($resolved.Path -eq $script:ManagerScriptPath -or
-            ($resolved.ModuleName -eq 'SSH-Manager' -and $resolved.Definition.Trim() -ceq $launch)) { return }
-        Write-Warning (Translate-Text "Der Name SSH-Manager ist durch einen anderen Befehl belegt ($($command.CommandType)). Du kannst dieses Skript weiterhin direkt starten.")
+        if ($resolved.ModuleName -eq 'SSH-Manager' -and $resolved.Definition.Trim() -ceq $launch) {
+            $installed = $resolved.Module.Path
+            $current = [IO.File]::ReadAllText($installed)
+            if ($current -ceq $launcher) { return }
+            if ($current -cne $legacyLauncher) { throw "Das Modulverzeichnis ist bereits belegt: $(Split-Path $installed)" }
+            $shortcut = Get-Command SSHM -ErrorAction SilentlyContinue
+            if ($shortcut -and -not ($shortcut.ModuleName -eq 'SSH-Manager' -and $shortcut.Definition.Trim() -ceq $launch)) {
+                Write-Warning 'SSHM is already used by another command. Existing command was not changed.'
+                return
+            }
+            [IO.File]::WriteAllText($installed, $launcher, [Text.UTF8Encoding]::new($true))
+            Write-Host (Translate-Text 'Der Kurzaufruf SSHM ist eingerichtet.')
+            return
+        }
+        if ($resolved.Path -ne $script:ManagerScriptPath) {
+            Write-Warning (Translate-Text "Der Name SSH-Manager ist durch einen anderen Befehl belegt ($($command.CommandType)). Du kannst dieses Skript weiterhin direkt starten.")
+            return
+        }
+    }
+    $shortcut = Get-Command SSHM -ErrorAction SilentlyContinue
+    if ($shortcut) {
+        Write-Warning 'SSHM is already used by another command. Existing command was not changed.'
         return
     }
 
     $root = Get-UserModuleDirectory
     $destination = Join-Path $root 'SSH-Manager'
-    $launcher = "function SSH-Manager { $launch }"
     $installed = Join-Path $destination 'SSH-Manager.psm1'
-    if ([IO.File]::Exists($installed) -and [IO.File]::ReadAllText($installed) -ceq $launcher) {
-        Write-Host (Translate-Text 'Gib zuerst Import-Module SSH-Manager und danach SSH-Manager ein.')
+    if ([IO.File]::Exists($installed)) {
+        $current = [IO.File]::ReadAllText($installed)
+        if ($current -ceq $launcher) { return }
+        if ($current -cne $legacyLauncher) { throw "Das Modulverzeichnis ist bereits belegt: $destination" }
+        [IO.File]::WriteAllText($installed, $launcher, [Text.UTF8Encoding]::new($true))
+        Write-Host (Translate-Text 'Der Kurzaufruf SSHM ist eingerichtet.')
         return
     }
     Write-Host (Translate-Text 'Mit dem Befehl SSH-Manager kannst du dieses Skript aus jedem Ordner starten.')
