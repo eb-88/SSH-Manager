@@ -633,25 +633,38 @@ function Get-UserModuleDirectory {
 function Initialize-GlobalCommand {
     $escapedPath = [System.Management.Automation.Language.CodeGeneration]::EscapeSingleQuotedStringContent($script:ManagerScriptPath)
     $launch = "& '$escapedPath'"
+    $legacyLauncher = "function SSH-Manager { $launch }"
+    $launcher = "$legacyLauncher`nfunction SSHM { $launch }"
     $command = Get-Command SSH-Manager -ErrorAction SilentlyContinue
     if ($command) {
         $resolved = if ($command -is [System.Management.Automation.AliasInfo]) { $command.ResolvedCommand } else { $command }
-        if ($resolved.Path -ne $script:ManagerScriptPath -and
-            -not ($resolved.ModuleName -eq 'SSH-Manager' -and $resolved.Definition.Trim() -ceq $launch)) {
+        if ($resolved.ModuleName -eq 'SSH-Manager' -and $resolved.Definition.Trim() -ceq $launch) {
+            $installed = $resolved.Module.Path
+            $current = [IO.File]::ReadAllText($installed)
+            if ($current -ceq $launcher) { return }
+            if ($current -cne $legacyLauncher) { throw "Das Modulverzeichnis ist bereits belegt: $(Split-Path $installed)" }
+            $shortcut = Get-Command SSHM -ErrorAction SilentlyContinue
+            if ($shortcut -and -not ($shortcut.ModuleName -eq 'SSH-Manager' -and $shortcut.Definition.Trim() -ceq $launch)) {
+                Write-Warning 'SSHM is already used by another command. Existing command was not changed.'
+                return
+            }
+            [IO.File]::WriteAllText($installed, $launcher, [Text.UTF8Encoding]::new($true))
+            Write-Host (Translate-Text 'Der Kurzaufruf SSHM ist eingerichtet.')
+            return
+        }
+        if ($resolved.Path -ne $script:ManagerScriptPath) {
             Write-Warning (Translate-Text "Der Name SSH-Manager ist durch einen anderen Befehl belegt ($($command.CommandType)). Du kannst dieses Skript weiterhin direkt starten.")
             return
         }
     }
     $shortcut = Get-Command SSHM -ErrorAction SilentlyContinue
-    if ($shortcut -and -not ($shortcut.ModuleName -eq 'SSH-Manager' -and $shortcut.Definition.Trim() -ceq $launch)) {
+    if ($shortcut) {
         Write-Warning 'SSHM is already used by another command. Existing command was not changed.'
         return
     }
 
     $root = Get-UserModuleDirectory
     $destination = Join-Path $root 'SSH-Manager'
-    $legacyLauncher = "function SSH-Manager { $launch }"
-    $launcher = "$legacyLauncher`nfunction SSHM { $launch }"
     $installed = Join-Path $destination 'SSH-Manager.psm1'
     if ([IO.File]::Exists($installed)) {
         $current = [IO.File]::ReadAllText($installed)
