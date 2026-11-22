@@ -342,6 +342,25 @@ try {
     $script:fakeRelease = 'preview'
     Test-ManagerUpdate
     Assert ($answers.Count -eq 1 -and -not $script:AvailableUpdateVersion) 'Invalid release tag prompted or marked outdated.'
+    $setting = Join-Path $store 'auto-update'
+    Assert ((Get-AutoUpdateEnabled) -and -not [IO.File]::Exists($setting)) 'Auto-update should default to on.'
+    $script:fakeRelease = 'v0.4.0'
+    $answers = [Collections.Queue]::new(@('O','A','Q'))
+    Start-Manager
+    Assert (-not (Get-AutoUpdateEnabled) -and [IO.File]::ReadAllText($setting) -ceq 'off') 'Disabling automatic updates was not saved.'
+    $screen.Clear()
+    $answers = [Collections.Queue]::new(@('O','U','n','Q'))
+    Start-Manager
+    Assert ($answers.Count -eq 0 -and $script:AvailableUpdateVersion -eq '0.4.0' -and
+        ($screen -join ' ') -match 'Update v0.4.0 verfügbar') 'Manual update check was blocked while auto updates were disabled.'
+    $script:fakeRelease = 'v0.3.4'
+    $screen.Clear()
+    $answers = [Collections.Queue]::new(@('O','U','Q'))
+    Start-Manager
+    Assert ($screen -contains 'Keine neue Version verfügbar.' -and $answers.Count -eq 0) 'Manual check must report when the installed version is current.'
+    $answers = [Collections.Queue]::new(@('O','A','Q'))
+    Start-Manager
+    Assert ((Get-AutoUpdateEnabled) -and [IO.File]::ReadAllText($setting) -ceq 'on') 'Re-enabling automatic updates failed.'
     Write-Output 'Alle Tests bestanden.'
 } finally {
     foreach ($file in [IO.Directory]::GetFiles($store)) { [IO.File]::Delete($file) }
