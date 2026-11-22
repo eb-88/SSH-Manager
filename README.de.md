@@ -66,4 +66,7 @@ Die Zielprofile liegen als `ziel-*.json` in `~/.ssh/ssh-manager/` in deinem Benu
 
 ## Updates
 
+Das Hauptmenü zeigt stets die installierte Skriptversion an. Wenn du eine neuere Version ablehnst oder das Update fehlschlägt, erscheint im Menü ein Hinweis **Veraltete Version** mit der verfügbaren Version. Ein erfolgreiches Update wird beim nächsten Start aktiv.
+
+
 Bei jedem Start prüft SSH Manager das neueste stabile GitHub-Release und fragt vor der Installation. Die neue Version wird beim nächsten Start aktiv. SSH-Ziele und Schlüssel bleiben erhalten. Das Skriptverzeichnis muss beschreibbar sein; Bash verwendet `curl` und GNU `sort`.
