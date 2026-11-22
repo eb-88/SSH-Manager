@@ -2,6 +2,7 @@
 
 $ErrorActionPreference = 'Stop'
 $store = Join-Path (Join-Path $HOME '.ssh') 'ssh-manager'
+$script:ManagerScriptPath = $PSCommandPath
 
 # Match version to latest stable release.
 $script:ManagerVersion = '0.3.3'
@@ -17,7 +18,8 @@ function Test-ManagerUpdate {
         $script:AvailableUpdateVersion = $newVersion
         $prompt = if ($script:Language -eq 'de') { "Version v$newVersion verfügbar (installiert: v$script:ManagerVersion). Jetzt installieren? [j/N]" } else { "Version v$newVersion available (installed: v$script:ManagerVersion). Install now? [y/N]" }
         if ((Read-Host $prompt) -notin 'y', 'yes', 'j', 'ja') { return }
-        $destination = $PSCommandPath
+        $destination = $script:ManagerScriptPath
+        if (-not $destination -or -not [IO.File]::Exists($destination)) { throw 'Could not locate the installed SSH Manager script.' }
         $temporary = Join-Path (Split-Path -Parent $destination) ([IO.Path]::GetRandomFileName())
         try {
             Invoke-WebRequest -Uri "https://raw.githubusercontent.com/eb-88/SSH-Manager/$tag/SSH-Manager.ps1" -OutFile $temporary -TimeoutSec 15 -UseBasicParsing
@@ -27,7 +29,7 @@ function Test-ManagerUpdate {
             $tokens = $null; $parseErrors = $null
             [void][System.Management.Automation.Language.Parser]::ParseFile($temporary, [ref]$tokens, [ref]$parseErrors)
             if ($parseErrors.Count) { throw 'Downloaded PowerShell script is invalid.' }
-            [IO.File]::Replace($temporary, $destination, $null)
+            [IO.File]::Replace($temporary, $destination, [NullString]::Value)
             $script:AvailableUpdateVersion = $null
             Write-Host $(if ($script:Language -eq 'de') { "Version v$newVersion installiert. Beim nächsten Start aktiv." } else { "Installed v$newVersion. It will run on the next launch." })
         } finally {
@@ -606,12 +608,12 @@ function Get-UserModuleDirectory {
 }
 
 function Initialize-GlobalCommand {
-    $escapedPath = [System.Management.Automation.Language.CodeGeneration]::EscapeSingleQuotedStringContent($PSCommandPath)
+    $escapedPath = [System.Management.Automation.Language.CodeGeneration]::EscapeSingleQuotedStringContent($script:ManagerScriptPath)
     $launch = "& '$escapedPath'"
     $command = Get-Command SSH-Manager -ErrorAction SilentlyContinue
     if ($command) {
         $resolved = if ($command -is [System.Management.Automation.AliasInfo]) { $command.ResolvedCommand } else { $command }
-        if ($resolved.Path -eq $PSCommandPath -or
+        if ($resolved.Path -eq $script:ManagerScriptPath -or
             ($resolved.ModuleName -eq 'SSH-Manager' -and $resolved.Definition.Trim() -ceq $launch)) { return }
         Write-Warning (Translate-Text "Der Name SSH-Manager ist durch einen anderen Befehl belegt ($($command.CommandType)). Du kannst dieses Skript weiterhin direkt starten.")
         return
@@ -646,7 +648,7 @@ function Initialize-GlobalCommand {
         Write-Host (Translate-Text 'Lade das Modul in jeder neuen Sitzung zuerst mit Import-Module SSH-Manager.')
     }
     Write-Host (Translate-Text 'Gib künftig in PowerShell in einem beliebigen Ordner SSH-Manager ein und drücke Enter.')
-    Write-Host (Translate-Text "Der Befehl verweist auf $PSCommandPath. Lass das Skript an diesem Speicherort.")
+    Write-Host (Translate-Text "Der Befehl verweist auf $script:ManagerScriptPath. Lass das Skript an diesem Speicherort.")
 }
 
 function Format-TargetAddress($target) {

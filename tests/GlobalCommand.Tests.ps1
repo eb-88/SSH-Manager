@@ -33,13 +33,30 @@ try {
             Microsoft.PowerShell.Management\Test-Path @PSBoundParameters
         }
         function Read-Host($Prompt) {
-            if ($Prompt -ne 'Auswahl') { exit 12 }
+            if ($Prompt -notin 'Auswahl', 'Selection') { exit 12 }
             'Q'
         }
         SSH-Manager
     }
     $output = & (Get-Process -Id $PID).Path -NoProfile -Command $check
-    if ($LASTEXITCODE -ne 0 -or ($output -join ' ') -notmatch 'SSH-Ziele') { throw 'Start in einer neuen PowerShell fehlgeschlagen.' }
+    if ($LASTEXITCODE -ne 0 -or ($output -join ' ') -notmatch 'SSH (targets|Ziele)') { throw 'Start in einer neuen PowerShell fehlgeschlagen.' }
+    # Reproduce updating a script invoked through the global PowerShell command.
+    if ($script:ManagerScriptPath -cne $source) { throw 'The script path was lost after dot-sourcing.' }
+    $answers = [Collections.Queue]::new(@('y'))
+    function Invoke-RestMethod { [pscustomobject]@{ tag_name = 'v0.4.0' } }
+    function Invoke-WebRequest {
+        param($Uri, $OutFile, $TimeoutSec, [switch]$UseBasicParsing)
+        $replacement = [IO.File]::ReadAllText($source).Replace(
+            '$script:ManagerVersion = ''0.3.3''', '$script:ManagerVersion = ''0.4.0''')
+        [IO.File]::WriteAllText($OutFile, $replacement)
+    }
+    Test-ManagerUpdate
+    $updated = [IO.File]::ReadAllText($source)
+    if ($answers.Count -ne 0 -or $script:AvailableUpdateVersion -or
+        -not $updated.Contains('$script:ManagerVersion = ''0.4.0''')) {
+        throw 'Self-update did not replace the installed script launched through the PowerShell module.'
+    }
+    Write-Output 'PowerShell self-update path verified.'
     Write-Output 'Globaler Start erfolgreich geprüft.'
 } finally {
     Pop-Location
