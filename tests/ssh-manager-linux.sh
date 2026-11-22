@@ -56,7 +56,12 @@ check grep -F '[O]' "$screen"
 check bash -c 'while IFS= read -r line; do ((${#line} <= 24)) || exit 1; done < "$1"' _ "$screen"
 check jq -e -s 'length == 2 and any(.[]; .Name == "Web" and .Port == 2222)' "$store"/ziel-*.json
 
-run_menu o s WEB 1 q
+records=$(list_records | jq -cs 'sort_by(.Name)')
+check test "$(filter_records "$records" 'DEPLOY 2222' | jq -s length)" -eq 1
+check test "$(filter_records "$records" 'managed STAGE' | jq -s length)" -eq 1
+check test "$(filter_records "$records" 'OpenSSH stage' | jq -s length)" -eq 0
+check test "$(filter_records "$records" '' | jq -s length)" -eq 2
+run_menu o s 'DEPLOY 2222' 1 q
 check grep -Fx -- '-p 2222 -l deploy -- example.org' "$calls"
 run_menu 1 q
 ready=("$store"/ziel-*.ed25519.ready)

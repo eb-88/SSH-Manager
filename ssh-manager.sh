@@ -182,6 +182,8 @@ translation_from=(
     'Ziel '\'''
     ' von '
     'Nr'
+    '[Enter] Übernehmen   [Esc] Abbrechen   [Backspace] Löschen'
+    'Suchbegriff: '
 )
 translation_to=(
     'The short name must be 1–64 characters, starting with a letter or digit. Allowed: A–Z, 0–9, period, underscore, and hyphen.'
@@ -309,6 +311,8 @@ translation_to=(
     'Target '\'''
     ' of '
     'No'
+    '[Enter] Apply   [Esc] Cancel   [Backspace] Delete'
+    'Search: '
 )
 init_language() {
     local candidate=${SSH_MANAGER_LANG:-}
@@ -786,16 +790,53 @@ transfer_targets() {
     fi
 }
 
+filter_records() {
+    jq -c --arg filter "$2" '
+        ($filter | ascii_downcase | split(" ") | map(select(length > 0))) as $terms
+        | .[] | select(
+            ([.Name, (.User + "@" + .Server + ":" + (.Port | tostring)),
+              .Server, .User, (.Port | tostring), .Login,
+              (if .Login == "Passwort" then "Verwaltet Managed" else "OpenSSH" end)]
+             | join(" ") | ascii_downcase) as $text
+            | all($terms[]; . as $term | $text | contains($term))
+        )' <<< "$1"
+}
+
+read_live_search() {
+    local records=$1 total=$2 query=$3 key rows
+    local -a matches=()
+    if [[ ! -t 0 || ! -t 1 ]]; then
+        ask 'Suche (Enter setzt zurück)'
+        return $?
+    fi
+    while true; do
+        get_width
+        rows=$(filter_records "$records" "$query") || return 1
+        matches=()
+        if [[ -n $rows ]]; then mapfile -t matches <<< "$rows"; fi
+        printf '\033[H\033[2J'
+        show_targets "$total" "$query" "${matches[@]}" || return 1
+        menu_text '[Enter] Übernehmen   [Esc] Abbrechen   [Backspace] Löschen'
+        translate_text 'Suchbegriff: '
+        printf '%s%s' "$REPLY" "$query"
+        IFS= read -rsn1 key || return 1
+        case $key in
+            '') REPLY=$query; trim; printf '\n'; return 0 ;;
+            $'\e') printf '\n'; return 2 ;;
+            $'\177'|$'\b') [[ -z $query ]] || query=${query%?} ;;
+            *) if [[ $key != [[:cntrl:]] ]]; then query+=$key; fi ;;
+        esac
+    done
+}
+
 start_manager() {
-    local records rows total filter='' action selection index target name
+    local records rows total filter='' action selection index target name status
     local -a visible=()
     while true; do
         get_width
         records=$(list_records | jq -cs 'sort_by(.Name | ascii_downcase)') || return 1
         total=$(jq length <<< "$records") || return 1
-        rows=$(jq -c --arg filter "$filter" '
-            .[] | select(([.Name, (.User + "@" + .Server + ":" + (.Port | tostring))] | join(" ") | ascii_downcase)
-                | contains($filter | ascii_downcase))' <<< "$records") || return 1
+        rows=$(filter_records "$records" "$filter") || return 1
         visible=()
         if [[ -n $rows ]]; then mapfile -t visible <<< "$rows"; fi
         show_targets "$total" "$filter" "${visible[@]}" || return 1
@@ -822,8 +863,12 @@ start_manager() {
                         esac
                         continue ;;
                     s)
-                        ask 'Suche (Enter setzt zurück)' || return 0
-                        filter=${REPLY//[[:cntrl:]]/}
+                        if read_live_search "$records" "$total" "$filter"; then
+                            filter=${REPLY//[[:cntrl:]]/}
+                        else
+                            status=$?
+                            ((status == 2)) || return 0
+                        fi
                         continue ;;
                     i|e) transfer_targets "$action" || true; continue ;;
                 esac

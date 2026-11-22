@@ -117,6 +117,8 @@ $script:English = @{
     'Privater Schlüssel fehlt: ' = 'Private key missing: '
     '[O] Optionen   [Q] Beenden' = '[O] Options   [Q] Quit'
     'Suche (Enter setzt zurück)' = 'Search (Enter to clear)'
+    '[Enter] Übernehmen   [Esc] Abbrechen   [Backspace] Löschen' = '[Enter] Apply   [Esc] Cancel   [Backspace] Delete'
+    'Suchbegriff: ' = 'Search: '
     'Privater Schlüssel fehlt.' = 'Private key missing.'
     'Benötigter Befehl fehlt (' = 'Required command is missing ('
     'Bearbeitung abgebrochen.' = 'Editing canceled.'
@@ -745,6 +747,49 @@ function Read-ManagerOption($width) {
     }
 }
 
+function Find-Targets($targets, [string]$filter) {
+    $terms = @($filter -split '\s+' | Where-Object { $_ })
+    foreach ($target in $targets) {
+        $method = if ($target.Login -eq 'Passwort') { 'Verwaltet Managed' } else { 'OpenSSH' }
+        $text = "$($target.Name) $(Format-TargetAddress $target) $($target.Server) $($target.User) $($target.Port) $($target.Login) $method"
+        $matches = $true
+        foreach ($term in $terms) {
+            if ($text.IndexOf($term, [StringComparison]::OrdinalIgnoreCase) -lt 0) {
+                $matches = $false
+                break
+            }
+        }
+        if ($matches) { $target }
+    }
+}
+
+function Read-LiveSearch($allTargets, [string]$currentFilter) {
+    if ([Console]::IsInputRedirected -or [Console]::IsOutputRedirected) {
+        return Read-MenuInput 'Suche (Enter setzt zurück)'
+    }
+    $query = $currentFilter
+    while ($true) {
+        $width = Get-MenuWidth
+        try {
+            Clear-Host
+            $matches = @(Find-Targets $allTargets $query)
+            Show-TargetMenu $matches $allTargets.Count $query $width
+            Write-MenuText '[Enter] Übernehmen   [Esc] Abbrechen   [Backspace] Löschen' $width
+            Write-MenuText "Suchbegriff: $query" $width
+            $key = [Console]::ReadKey($true)
+        } catch {
+            return Read-MenuInput 'Suche (Enter setzt zurück)' $width
+        }
+        if ($key.Key -eq [ConsoleKey]::Enter) { return $query.Trim() }
+        if ($key.Key -eq [ConsoleKey]::Escape) { return $null }
+        if ($key.Key -eq [ConsoleKey]::Backspace) {
+            if ($query.Length) { $query = $query.Substring(0, $query.Length - 1) }
+        } elseif (-not [char]::IsControl($key.KeyChar)) {
+            $query += $key.KeyChar
+        }
+    }
+}
+
 function Start-Manager {
     $filter = ''
     $previousWidth = 0
@@ -753,12 +798,7 @@ function Start-Manager {
         $width = Get-MenuWidth
         if ($refresh -or $width -ne $previousWidth) {
             $allTargets = @(Get-Targets | Sort-Object Name)
-            $targets = $allTargets
-            if ($filter) {
-                $targets = @($allTargets | Where-Object {
-                    "$($_.Name) $(Format-TargetAddress $_)".IndexOf($filter, [StringComparison]::OrdinalIgnoreCase) -ge 0
-                })
-            }
+            $targets = @(Find-Targets $allTargets $filter)
             Show-TargetMenu $targets $allTargets.Count $filter $width
             $previousWidth = $width
             $refresh = $false
@@ -789,9 +829,8 @@ function Start-Manager {
             }
             if ($action -eq 'N') { Edit-Target; continue }
             if ($action -eq 'S') {
-                $query = Read-MenuInput 'Suche (Enter setzt zurück)' $width
-                if ($null -eq $query) { return }
-                $filter = ([regex]::Replace($query, '\p{Cc}', '')).Trim()
+                $query = Read-LiveSearch $allTargets $filter
+                if ($null -ne $query) { $filter = ([regex]::Replace($query, '\p{Cc}', '')).Trim() }
                 continue
             }
             if ($action -in 'I', 'E') {

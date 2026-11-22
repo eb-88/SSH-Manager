@@ -53,7 +53,7 @@ Mit **O** öffnest du das Menü `Optionen`. **Enter** bringt dich von dort zurü
 | Eingabe | Menüpunkt | Aktion |
 | --- | --- | --- |
 | **N** | Neu | Ein Ziel hinzufügen. |
-| **S** | Suchen | Nach Kurzname, Host, Benutzer oder Port filtern. Lass den Suchbegriff leer, um wieder alle Ziele anzuzeigen. |
+| **S** | Suchen | Live-Volltextsuche über Kurzname, Host, Benutzer, Port und Anmeldeart. Die Treffer aktualisieren sich bei jedem Tastendruck; mehrere Wörter können unterschiedliche Felder treffen. **Enter** übernimmt den Filter, **Esc** bricht ab und **Backspace** löscht Zeichen. Ein leerer Suchbegriff mit Enter zeigt wieder alle Ziele. Ohne interaktives Terminal bleibt die normale Zeileneingabe erhalten. |
 | **B** | Bearbeiten | Ein Ziel zum Bearbeiten auswählen. Beim Umbenennen bleibt der Schlüssel zugeordnet. Änderst du nur den Port, übernimmst du mit Enter den bisherigen Schlüssel. Der Manager prüft ihn beim nächsten Verbindungsaufbau am neuen Port. Mit **n** richtest du einen anderen ein. |
 | **L** | Löschen | Ein Ziel auswählen und mit **j** aus der Liste entfernen. |
 | **I** | Import | Ziele aus einer exportierten JSON-Datei übernehmen. Gleichnamige Ziele werden übersprungen. |

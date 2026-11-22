@@ -184,6 +184,11 @@ try {
     Assert (-not (Get-Targets | Where-Object Name -eq Archiv) -and @(Get-Targets).Count -eq 3) 'Löschen hat die falschen Ziele verändert.'
 
     $visibleTargets = @(Get-Targets | Sort-Object Name)
+    Assert (@(Find-Targets $visibleTargets 'MANAGED 2222').Count -eq 1 -and
+        @(Find-Targets $visibleTargets 'OpenSSH Zweit').Count -eq 1 -and
+        @(Find-Targets $visibleTargets 'alice neu').Count -eq 1 -and
+        @(Find-Targets $visibleTargets 'missing').Count -eq 0 -and
+        @(Find-Targets $visibleTargets '').Count -eq $visibleTargets.Count) 'Full-text search must match all words across target fields and clear correctly.'
     foreach ($width in 24, 40, 67, 68, 104) {
         $screen.Clear()
         Show-TargetMenu $visibleTargets $visibleTargets.Count '' $width
