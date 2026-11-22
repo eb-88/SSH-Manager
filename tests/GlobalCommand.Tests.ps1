@@ -54,7 +54,7 @@ try {
             if ($Prompt -notin 'Auswahl', 'Selection') { exit 15 }
             'Q'
         }
-        function Invoke-RestMethod { [pscustomobject]@{ tag_name = 'v0.3.6' } }
+        function Invoke-RestMethod { [pscustomobject]@{ tag_name = 'v0.3.7' } }
         # Autoload the legacy module; it updates its own file when executed.
         SSH-Manager
         if (-not (Get-Command SSHM -ErrorAction SilentlyContinue)) {
@@ -97,7 +97,7 @@ try {
     function Invoke-WebRequest {
         param($Uri, $OutFile, $TimeoutSec, [switch]$UseBasicParsing)
         $replacement = [IO.File]::ReadAllText($source).Replace(
-            '$script:ManagerVersion = ''0.3.6''', '$script:ManagerVersion = ''0.4.0''')
+            '$script:ManagerVersion = ''0.3.7''', '$script:ManagerVersion = ''0.4.0''')
         [IO.File]::WriteAllText($OutFile, $replacement)
     }
     Test-ManagerUpdate
