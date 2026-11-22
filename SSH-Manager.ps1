@@ -4,7 +4,7 @@ $ErrorActionPreference = 'Stop'
 $store = Join-Path (Join-Path $HOME '.ssh') 'ssh-manager'
 
 # Match version to latest stable release.
-$script:ManagerVersion = '0.3.2'
+$script:ManagerVersion = '0.3.3'
 $script:AvailableUpdateVersion = $null
 function Test-ManagerUpdate {
     $script:AvailableUpdateVersion = $null

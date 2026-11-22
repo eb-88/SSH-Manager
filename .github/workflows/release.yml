@@ -6,13 +6,13 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Version tag (for example v0.3.2)
+        description: Version tag (for example v0.3.3)
         required: true
         type: string
 
 jobs:
   publish:
-    if: "${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'chore(release): publish v0.3.2') }}"
+    if: "${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'chore(release): publish v0.3.3') }}"
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -28,19 +28,20 @@ jobs:
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || 'v0.3.2' }}
+          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || 'v0.3.3' }}
         run: |
           set -euo pipefail
           notes=$(cat <<'NOTES'
-          SSH Manager v0.3.2 displays the installed version and warns about available updates.
+          SSH Manager v0.3.3 adds live full-text search for SSH targets.
 
-          - Show the currently installed version in the main menu on Bash and PowerShell.
-          - Keep a visible, localized outdated-version notice when a newer release is declined.
-          - Show the notice if an attempted update fails; clear it after a successful update.
-          - Keep startup usable offline and preserve saved SSH targets and keys.
-          - Add regression tests for the version indicator and update status in English and German.
+          - Update matching targets instantly as each character is typed in PowerShell and Bash.
+          - Search case-insensitively by name, hostname, user, port and login method.
+          - Match multiple words across different target fields.
+          - Support Enter to apply, Esc to cancel and Backspace to edit the search.
+          - Keep non-interactive search input compatible and update German/English documentation.
+          - Expand PowerShell and Linux regression tests.
 
-          [Changes since v0.3.1](https://github.com/eb-88/SSH-Manager/compare/v0.3.1...v0.3.2)
+          [Changes since v0.3.2](https://github.com/eb-88/SSH-Manager/compare/v0.3.2...v0.3.3)
           NOTES
           )
           gh release create "$TAG" \
