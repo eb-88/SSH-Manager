@@ -13,7 +13,8 @@ if [[ -e "$checkout" ]]; then
     printf 'SSH Manager is already installed. Update it? [y/N] ' >&2
     answer=''
     if ! IFS= read -r answer </dev/tty 2>/dev/null; then
-        IFS= read -r answer || answer=''
+        # A piped installer reads its source from stdin; never consume that stream as a response.
+        if [[ -f ${BASH_SOURCE[0]} ]]; then IFS= read -r answer || answer=''; fi
     fi
     case ${answer,,} in
         y|yes|j|ja) git -C "$checkout" pull --ff-only ;;
