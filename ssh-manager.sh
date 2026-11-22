@@ -12,14 +12,14 @@ available_update_version=''
 manager_script=${BASH_SOURCE[0]}
 
 check_update() {
+    local manual=${1:-} release tag version latest answer dest temporary url
     available_update_version=''
-    local release tag version latest answer dest temporary url
-    release=$(curl -fsSL --max-time 5 -H 'Accept: application/vnd.github+json' -H 'User-Agent: SSH-Manager' 'https://api.github.com/repos/eb-88/SSH-Manager/releases/latest' 2>/dev/null) || return 0
-    tag=$(jq -r '.tag_name // ""' <<< "$release" 2>/dev/null) || return 0
-    [[ $tag =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]] || return 0
+    release=$(curl -fsSL --max-time 5 -H 'Accept: application/vnd.github+json' -H 'User-Agent: SSH-Manager' 'https://api.github.com/repos/eb-88/SSH-Manager/releases/latest' 2>/dev/null) || { [[ $manual != manual ]] || menu_text 'Updateprüfung fehlgeschlagen.'; return 0; }
+    tag=$(jq -r '.tag_name // ""' <<< "$release" 2>/dev/null) || { [[ $manual != manual ]] || menu_text 'Updateprüfung fehlgeschlagen.'; return 0; }
+    [[ $tag =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]] || { [[ $manual != manual ]] || menu_text 'Updateprüfung fehlgeschlagen.'; return 0; }
     version=${tag#v}
     latest=$(printf '%s\n%s\n' "$manager_version" "$version" | sort -V | tail -n 1)
-    [[ $latest == "$version" && $version != "$manager_version" ]] || return 0
+    [[ $latest == "$version" && $version != "$manager_version" ]] || { [[ $manual != manual ]] || menu_text 'Keine neue Version verfügbar.'; return 0; }
     available_update_version=$version
     if [[ $language == de ]]; then
         ask "Version v$version verfügbar (installiert: v$manager_version). Jetzt installieren? [j/N]" || return 0
@@ -184,6 +184,13 @@ translation_from=(
     'Nr'
     '[Enter] Übernehmen   [Esc] Abbrechen   [Backspace] Löschen'
     'Suchbegriff: '
+    '[A] Automatische Updates: Ein'
+    '[A] Automatische Updates: Aus'
+    '[U] Jetzt nach Updates suchen'
+    'Automatische Updates aktiviert.'
+    'Automatische Updates deaktiviert.'
+    'Keine neue Version verfügbar.'
+    'Updateprüfung fehlgeschlagen.'
 )
 translation_to=(
     'The short name must be 1–64 characters, starting with a letter or digit. Allowed: A–Z, 0–9, period, underscore, and hyphen.'
@@ -313,6 +320,13 @@ translation_to=(
     'No'
     '[Enter] Apply   [Esc] Cancel   [Backspace] Delete'
     'Search: '
+    '[A] Automatic updates: On'
+    '[A] Automatic updates: Off'
+    '[U] Check for updates now'
+    'Automatic updates enabled.'
+    'Automatic updates disabled.'
+    'No new version available.'
+    'Could not check for updates.'
 )
 init_language() {
     local candidate=${SSH_MANAGER_LANG:-}
@@ -334,6 +348,12 @@ set_language() {
     [[ $chosen == en || $chosen == de ]] || return 1
     write_file "$store/language" "$chosen" replace || return 1
     language=$chosen
+}
+auto_updates_enabled() {
+    [[ ! -f $store/auto-update || $(< "$store/auto-update") != off ]]
+}
+set_auto_updates() {
+    write_file "$store/auto-update" "$1" replace
 }
 init_language
 probe_options=(-T -o ControlPath=none -o ClearAllForwardings=yes -o PermitLocalCommand=no
@@ -762,9 +782,15 @@ read_option() {
     menu_text '[N] Neu   [B] Bearbeiten   [L] Löschen'
     menu_text '[S] Suchen   [I] Import   [E] Export'
     menu_text '[G] Sprache'
+    if auto_updates_enabled; then
+        menu_text '[A] Automatische Updates: Ein'
+    else
+        menu_text '[A] Automatische Updates: Aus'
+    fi
+    menu_text '[U] Jetzt nach Updates suchen'
     menu_text '[Enter] Zurück'
     while ask Option; do
-        case ${REPLY,,} in ''|n|b|l|s|i|e|g) return 0 ;; esac
+        case ${REPLY,,} in ''|n|b|l|s|i|e|g|a|u) return 0 ;; esac
         menu_text 'Bitte eine angezeigte Option wählen.'
     done
     return 1
@@ -852,6 +878,16 @@ start_manager() {
                 case $action in
                     '') continue ;;
                     n) edit_target || true; continue ;;
+                    a)
+                        if auto_updates_enabled; then
+                            set_auto_updates off || return 1
+                            menu_text 'Automatische Updates deaktiviert.'
+                        else
+                            set_auto_updates on || return 1
+                            menu_text 'Automatische Updates aktiviert.'
+                        fi
+                        continue ;;
+                    u) check_update manual; continue ;;
                     g)
                         menu_text 'Sprache wählen · [1] Englisch  [2] Deutsch'
                         ask 'Sprache (Enter zurück)' || return 0
@@ -908,7 +944,7 @@ main() {
         command -v "$dependency" >/dev/null || { fail "Benötigter Befehl fehlt ($dependency)."; return 1; }
     done
     mkdir -p -- "$store" || return 1
-    check_update
+    if auto_updates_enabled; then check_update; fi
     start_manager
 }
 
