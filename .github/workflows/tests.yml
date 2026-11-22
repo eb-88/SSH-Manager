@@ -22,3 +22,6 @@ jobs:
       - name: PowerShell regression tests
         shell: pwsh
         run: ./tests/SSH-Manager.Tests.ps1
+      - name: PowerShell global launcher and updater regression tests
+        shell: pwsh
+        run: ./tests/GlobalCommand.Tests.ps1
