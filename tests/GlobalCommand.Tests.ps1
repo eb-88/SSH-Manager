@@ -58,7 +58,7 @@ try {
     }
     $output = & (Get-Process -Id $PID).Path -NoProfile -Command $check
     if ($LASTEXITCODE -ne 0 -or @($output | Where-Object { $_ -match 'SSH (targets|Ziele)' }).Count -ne 3) {
-        throw 'Global start using SSH-Manager, SSHM or sshm failed in a new PowerShell session.'
+        throw "Global launcher failed (exit $LASTEXITCODE; output: $($output -join ' | '))."
     }
     # Reproduce updating a script invoked through the global PowerShell command.
     if ($script:ManagerScriptPath -cne $source) { throw 'The script path was lost after dot-sourcing.' }
