@@ -630,7 +630,7 @@ function Get-UserModuleDirectory {
     throw 'Das PowerShell-Modulverzeichnis deines Benutzerkontos fehlt in PSModulePath.'
 }
 
-function Import-ManagerShortCommand([string]$modulePath, [string]$launch) {
+function Register-ManagerShortCommand([string]$launch) {
     $shortcut = Get-Command SSHM -ErrorAction SilentlyContinue
     if ($shortcut) {
         if ($shortcut.CommandType -eq 'Function' -and $shortcut.Definition.Trim() -ceq $launch) { return }
@@ -655,7 +655,7 @@ function Initialize-GlobalCommand {
             $installed = $resolved.Module.Path
             $current = [IO.File]::ReadAllText($installed)
             if ($current -ceq $launcher) {
-                Import-ManagerShortCommand $installed $launch
+                Register-ManagerShortCommand $launch
                 return
             }
             if ($current -cne $legacyLauncher) { throw "Das Modulverzeichnis ist bereits belegt: $(Split-Path $installed)" }
@@ -665,7 +665,7 @@ function Initialize-GlobalCommand {
                 return
             }
             [IO.File]::WriteAllText($installed, $launcher, [Text.UTF8Encoding]::new($true))
-            Import-ManagerShortCommand $installed $launch
+            Register-ManagerShortCommand $launch
             Write-Host (Translate-Text 'Der Kurzaufruf SSHM ist eingerichtet.')
             return
         }
@@ -686,12 +686,12 @@ function Initialize-GlobalCommand {
     if ([IO.File]::Exists($installed)) {
         $current = [IO.File]::ReadAllText($installed)
         if ($current -ceq $launcher) {
-            Import-ManagerShortCommand $installed $launch
+            Register-ManagerShortCommand $launch
             return
         }
         if ($current -cne $legacyLauncher) { throw "Das Modulverzeichnis ist bereits belegt: $destination" }
         [IO.File]::WriteAllText($installed, $launcher, [Text.UTF8Encoding]::new($true))
-        Import-ManagerShortCommand $installed $launch
+        Register-ManagerShortCommand $launch
         Write-Host (Translate-Text 'Der Kurzaufruf SSHM ist eingerichtet.')
         return
     }
@@ -712,7 +712,7 @@ function Initialize-GlobalCommand {
             [IO.Directory]::Delete($stage)
         }
     }
-    Import-ManagerShortCommand $installed $launch
+    Register-ManagerShortCommand $launch
     if (-not (Get-Command SSH-Manager -ErrorAction SilentlyContinue)) {
         Write-Host (Translate-Text 'Lade das Modul in jeder neuen Sitzung zuerst mit Import-Module SSH-Manager.')
     }
