@@ -630,6 +630,23 @@ function Get-UserModuleDirectory {
     throw 'Das PowerShell-Modulverzeichnis deines Benutzerkontos fehlt in PSModulePath.'
 }
 
+function Import-ManagerShortCommand([string]$modulePath, [string]$launch) {
+    $shortcut = Get-Command SSHM -ErrorAction SilentlyContinue
+    if ($shortcut) {
+        if ($shortcut.ModuleName -eq 'SSH-Manager' -and $shortcut.Definition.Trim() -ceq $launch) { return }
+        Write-Warning 'SSHM is already used by another command. Existing command was not changed.'
+        return
+    }
+    # Updating the .psm1 file does not refresh functions exported by a module
+    # that PowerShell has already loaded. Reload it in the caller's session.
+    Import-Module -Name $modulePath -Force -Global -ErrorAction Stop | Out-Null
+    $shortcut = Get-Command SSHM -ErrorAction SilentlyContinue
+    if (-not $shortcut -or $shortcut.ModuleName -ne 'SSH-Manager' -or
+        $shortcut.Definition.Trim() -cne $launch) {
+        throw 'Could not load the SSHM shortcut into this PowerShell session.'
+    }
+}
+
 function Initialize-GlobalCommand {
     $escapedPath = [System.Management.Automation.Language.CodeGeneration]::EscapeSingleQuotedStringContent($script:ManagerScriptPath)
     $launch = "& '$escapedPath'"
@@ -641,7 +658,10 @@ function Initialize-GlobalCommand {
         if ($resolved.ModuleName -eq 'SSH-Manager' -and $resolved.Definition.Trim() -ceq $launch) {
             $installed = $resolved.Module.Path
             $current = [IO.File]::ReadAllText($installed)
-            if ($current -ceq $launcher) { return }
+            if ($current -ceq $launcher) {
+                Import-ManagerShortCommand $installed $launch
+                return
+            }
             if ($current -cne $legacyLauncher) { throw "Das Modulverzeichnis ist bereits belegt: $(Split-Path $installed)" }
             $shortcut = Get-Command SSHM -ErrorAction SilentlyContinue
             if ($shortcut -and -not ($shortcut.ModuleName -eq 'SSH-Manager' -and $shortcut.Definition.Trim() -ceq $launch)) {
@@ -649,6 +669,7 @@ function Initialize-GlobalCommand {
                 return
             }
             [IO.File]::WriteAllText($installed, $launcher, [Text.UTF8Encoding]::new($true))
+            Import-ManagerShortCommand $installed $launch
             Write-Host (Translate-Text 'Der Kurzaufruf SSHM ist eingerichtet.')
             return
         }
@@ -668,9 +689,13 @@ function Initialize-GlobalCommand {
     $installed = Join-Path $destination 'SSH-Manager.psm1'
     if ([IO.File]::Exists($installed)) {
         $current = [IO.File]::ReadAllText($installed)
-        if ($current -ceq $launcher) { return }
+        if ($current -ceq $launcher) {
+            Import-ManagerShortCommand $installed $launch
+            return
+        }
         if ($current -cne $legacyLauncher) { throw "Das Modulverzeichnis ist bereits belegt: $destination" }
         [IO.File]::WriteAllText($installed, $launcher, [Text.UTF8Encoding]::new($true))
+        Import-ManagerShortCommand $installed $launch
         Write-Host (Translate-Text 'Der Kurzaufruf SSHM ist eingerichtet.')
         return
     }
@@ -691,6 +716,7 @@ function Initialize-GlobalCommand {
             [IO.Directory]::Delete($stage)
         }
     }
+    Import-ManagerShortCommand $installed $launch
     if (-not (Get-Command SSH-Manager -ErrorAction SilentlyContinue)) {
         Write-Host (Translate-Text 'Lade das Modul in jeder neuen Sitzung zuerst mit Import-Module SSH-Manager.')
     }
