@@ -41,6 +41,36 @@ try {
         throw 'Existing PowerShell module was not upgraded with the SSHM shortcut.'
     }
 
+    # Reproduce the reported bug: an existing PowerShell session has already loaded
+    # the original module without SSHM. Running SSH-Manager updates the module file,
+    # but must also expose SSHM immediately without restarting PowerShell.
+    [IO.File]::WriteAllText($installed, $legacy)
+    $existingSession = {
+        function Test-Path($LiteralPath) {
+            if ($LiteralPath -eq (Join-Path (Join-Path $HOME '.ssh') 'ssh-manager')) { return $false }
+            Microsoft.PowerShell.Management\Test-Path @PSBoundParameters
+        }
+        function Read-Host($Prompt) {
+            if ($Prompt -notin 'Auswahl', 'Selection') { exit 15 }
+            'Q'
+        }
+        function Invoke-RestMethod { [pscustomobject]@{ tag_name = 'v0.3.6' } }
+        # Autoload the legacy module; it updates its own file when executed.
+        SSH-Manager
+        if (-not (Get-Command SSHM -ErrorAction SilentlyContinue)) {
+            throw 'SSHM was not registered in the current PowerShell session.'
+        }
+        sshm
+        SSHM
+    }
+    $output = & (Get-Process -Id $PID).Path -NoProfile -Command $existingSession
+    if ($LASTEXITCODE -ne 0 -or @($output | Where-Object { $_ -match 'SSH (targets|Ziele)' }).Count -ne 3) {
+        throw "Short command unavailable in an already running PowerShell session (exit $LASTEXITCODE; output: $($output -join ' | '))."
+    }
+    if (-not [IO.File]::ReadAllText($installed).Contains('function SSHM')) {
+        throw 'The existing module was not upgraded on disk.'
+    }
+
     # Ohne Profil und außerhalb des Skriptordners muss allein die Zieleauswahl erscheinen.
     Set-Location -LiteralPath $modules
     $check = {

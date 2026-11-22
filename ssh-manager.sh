@@ -938,12 +938,35 @@ start_manager() {
     done
 }
 
+# Install missing short commands for users who upgraded the Linux launcher
+# through the built-in updater (which replaces only ssh-manager).
+ensure_short_commands() {
+    local launcher="$HOME/.local/bin/ssh-manager" invoked="$manager_script" shortcut link
+    [[ $invoked == /* ]] || invoked="$PWD/$invoked"
+    # Only touch the standard installed launcher, never a source checkout or
+    # an arbitrary file called ssh-manager.sh.
+    [[ -f $launcher && $invoked -ef $launcher ]] || return 0
+    for shortcut in sshm SSHM; do
+        link="$HOME/.local/bin/$shortcut"
+        if [[ -e $link || -L $link ]]; then
+            if [[ ! $link -ef $launcher ]]; then
+                printf 'SSH Manager: shortcut %s is already in use; leaving it unchanged.\n' "$link" >&2
+            fi
+            continue
+        fi
+        if ! ln -s -- ssh-manager "$link"; then
+            printf 'SSH Manager: could not create shortcut %s.\n' "$link" >&2
+        fi
+    done
+}
+
 main() {
     local dependency
     for dependency in jq ssh ssh-keygen flock; do
         command -v "$dependency" >/dev/null || { fail "Benötigter Befehl fehlt ($dependency)."; return 1; }
     done
     mkdir -p -- "$store" || return 1
+    ensure_short_commands
     if auto_updates_enabled; then check_update; fi
     start_manager
 }

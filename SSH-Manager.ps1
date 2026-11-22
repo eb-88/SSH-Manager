@@ -630,6 +630,19 @@ function Get-UserModuleDirectory {
     throw 'Das PowerShell-Modulverzeichnis deines Benutzerkontos fehlt in PSModulePath.'
 }
 
+function Register-ManagerShortCommand([string]$launch) {
+    $shortcut = Get-Command SSHM -ErrorAction SilentlyContinue
+    if ($shortcut) {
+        if ($shortcut.CommandType -eq 'Function' -and $shortcut.Definition.Trim() -ceq $launch) { return }
+        Write-Warning 'SSHM is already used by another command. Existing command was not changed.'
+        return
+    }
+    # A loaded PowerShell module keeps its original exported commands even when
+    # its .psm1 file changes. Re-importing it here would discard the running
+    # script's module context, so register the same launcher in the session.
+    Set-Item -Path Function:\global:SSHM -Value ([scriptblock]::Create($launch)) -ErrorAction Stop
+}
+
 function Initialize-GlobalCommand {
     $escapedPath = [System.Management.Automation.Language.CodeGeneration]::EscapeSingleQuotedStringContent($script:ManagerScriptPath)
     $launch = "& '$escapedPath'"
@@ -641,14 +654,18 @@ function Initialize-GlobalCommand {
         if ($resolved.ModuleName -eq 'SSH-Manager' -and $resolved.Definition.Trim() -ceq $launch) {
             $installed = $resolved.Module.Path
             $current = [IO.File]::ReadAllText($installed)
-            if ($current -ceq $launcher) { return }
+            if ($current -ceq $launcher) {
+                Register-ManagerShortCommand $launch
+                return
+            }
             if ($current -cne $legacyLauncher) { throw "Das Modulverzeichnis ist bereits belegt: $(Split-Path $installed)" }
             $shortcut = Get-Command SSHM -ErrorAction SilentlyContinue
-            if ($shortcut -and -not ($shortcut.ModuleName -eq 'SSH-Manager' -and $shortcut.Definition.Trim() -ceq $launch)) {
+            if ($shortcut -and -not ($shortcut.CommandType -eq 'Function' -and $shortcut.Definition.Trim() -ceq $launch)) {
                 Write-Warning 'SSHM is already used by another command. Existing command was not changed.'
                 return
             }
             [IO.File]::WriteAllText($installed, $launcher, [Text.UTF8Encoding]::new($true))
+            Register-ManagerShortCommand $launch
             Write-Host (Translate-Text 'Der Kurzaufruf SSHM ist eingerichtet.')
             return
         }
@@ -668,9 +685,13 @@ function Initialize-GlobalCommand {
     $installed = Join-Path $destination 'SSH-Manager.psm1'
     if ([IO.File]::Exists($installed)) {
         $current = [IO.File]::ReadAllText($installed)
-        if ($current -ceq $launcher) { return }
+        if ($current -ceq $launcher) {
+            Register-ManagerShortCommand $launch
+            return
+        }
         if ($current -cne $legacyLauncher) { throw "Das Modulverzeichnis ist bereits belegt: $destination" }
         [IO.File]::WriteAllText($installed, $launcher, [Text.UTF8Encoding]::new($true))
+        Register-ManagerShortCommand $launch
         Write-Host (Translate-Text 'Der Kurzaufruf SSHM ist eingerichtet.')
         return
     }
@@ -691,6 +712,7 @@ function Initialize-GlobalCommand {
             [IO.Directory]::Delete($stage)
         }
     }
+    Register-ManagerShortCommand $launch
     if (-not (Get-Command SSH-Manager -ErrorAction SilentlyContinue)) {
         Write-Host (Translate-Text 'Lade das Modul in jeder neuen Sitzung zuerst mit Import-Module SSH-Manager.')
     }
