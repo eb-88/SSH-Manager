@@ -8,7 +8,7 @@ SSH-Manager saves your SSH destinations in a terminal menu that runs in PowerShe
 
 ### Linux
 
-Requires Bash 4.4 or later, Git, `jq` 1.6 or later, the OpenSSH client, and `flock` from util-linux. On Debian and Ubuntu, run `sudo apt install git jq openssh-client util-linux` if needed.
+Requires Bash 4.4 or later, Git, `jq` 1.6 or later, `curl`, the OpenSSH client, and `flock` from util-linux. On Debian and Ubuntu, run `sudo apt install git jq curl openssh-client util-linux` if needed.
 
 ```bash
 git clone --depth 1 https://github.com/eb-88/SSH-Manager.git "$HOME/.local/share/ssh-manager" && install -Dm755 "$HOME/.local/share/ssh-manager/ssh-manager.sh" "$HOME/.local/bin/ssh-manager" && "$HOME/.local/bin/ssh-manager"

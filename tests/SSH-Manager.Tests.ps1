@@ -316,6 +316,19 @@ try {
         $screen -contains 'Sprache wählen · [1] Englisch  [2] Deutsch' -and
         [IO.File]::ReadAllText((Join-Path $store 'language')) -ceq 'en') 'Language switching failed.'
     $script:Language = 'de'
+    # Latest release check: ask only when a newer stable version exists.
+    function Invoke-RestMethod { [pscustomobject]@{ tag_name = $script:fakeRelease } }
+    $script:fakeRelease = 'v0.4.0'
+    $answers = [Collections.Queue]::new(@('n'))
+    Test-ManagerUpdate
+    Assert ($answers.Count -eq 0) 'Update decline was not read.'
+    $script:fakeRelease = 'v0.3.0'
+    $answers = [Collections.Queue]::new(@('n'))
+    Test-ManagerUpdate
+    Assert ($answers.Count -eq 1) 'The current release prompted for installation.'
+    $script:fakeRelease = 'preview'
+    Test-ManagerUpdate
+    Assert ($answers.Count -eq 1) 'Invalid release tag prompted for installation.'
     Write-Output 'Alle Tests bestanden.'
 } finally {
     foreach ($file in [IO.Directory]::GetFiles($store)) { [IO.File]::Delete($file) }

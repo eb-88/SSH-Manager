@@ -7,12 +7,11 @@ store="$HOME/.ssh/ssh-manager"
 width=80
 
 # Must match the latest published stable release when tagging a new version.
-manager_version=0.2.0
+manager_version=0.3.0
 manager_script=${BASH_SOURCE[0]}
 
 check_update() {
     local release tag version latest answer dest temporary url
-    command -v curl >/dev/null || return 0
     release=$(curl -fsSL --max-time 5 -H 'Accept: application/vnd.github+json' -H 'User-Agent: SSH-Manager' 'https://api.github.com/repos/eb-88/SSH-Manager/releases/latest' 2>/dev/null) || return 0
     tag=$(jq -r '.tag_name // ""' <<< "$release" 2>/dev/null) || return 0
     [[ $tag =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]] || return 0
