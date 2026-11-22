@@ -136,21 +136,33 @@ curl() {
 language=en
 check_update <<< n > "$screen"
 check grep -F 'available' "$screen"
+check test "$available_update_version" = 0.4.0
+show_targets 0 '' > "$screen"
+check grep -F 'SSH-Manager · v0.3.1' "$screen"
+check grep -F 'Outdated version! Update v0.4.0 available.' "$screen"
+language=de
+show_targets 0 '' > "$screen"
+check grep -F 'Veraltete Version! Update v0.4.0 verfügbar.' "$screen"
+language=en
 check grep -Fx manager_version=0.3.1 "$manager_script"
 download_version=0.5.0
 check_update <<< y > "$screen"
 check grep -F 'Update failed' "$screen"
+check test "$available_update_version" = 0.4.0
 check grep -Fx manager_version=0.3.1 "$manager_script"
 download_version=0.4.0
 check_update <<< y > "$screen"
 check grep -F 'Installed v0.4.0' "$screen"
+check test -z "$available_update_version"
 check grep -Fx manager_version=0.4.0 "$manager_script"
 release_tag=v0.3.1
 check_update > "$screen"
 check test ! -s "$screen"
+check test -z "$available_update_version"
 release_tag=v0.5.0
 curl() { return 28; }
 check_update > "$screen"
 check test ! -s "$screen"
+check test -z "$available_update_version"
 check grep -Fx manager_version=0.4.0 "$manager_script"
 printf 'Update-Tests bestanden.\n'

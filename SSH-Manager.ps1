@@ -5,13 +5,16 @@ $store = Join-Path (Join-Path $HOME '.ssh') 'ssh-manager'
 
 # Match version to latest stable release.
 $script:ManagerVersion = '0.3.1'
+$script:AvailableUpdateVersion = $null
 function Test-ManagerUpdate {
+    $script:AvailableUpdateVersion = $null
     try {
         $release = Invoke-RestMethod -Uri 'https://api.github.com/repos/eb-88/SSH-Manager/releases/latest' -TimeoutSec 5 -Headers @{ 'User-Agent' = 'SSH-Manager' }
         $tag = [string]$release.tag_name
         if ($tag -notmatch '^v[0-9]+[.][0-9]+[.][0-9]+$') { return }
         $newVersion = $tag.Substring(1)
         if ([version]$newVersion -le [version]$script:ManagerVersion) { return }
+        $script:AvailableUpdateVersion = $newVersion
         $prompt = if ($script:Language -eq 'de') { "Version v$newVersion verfügbar (installiert: v$script:ManagerVersion). Jetzt installieren? [j/N]" } else { "Version v$newVersion available (installed: v$script:ManagerVersion). Install now? [y/N]" }
         if ((Read-Host $prompt) -notin 'y', 'yes', 'j', 'ja') { return }
         $destination = $PSCommandPath
@@ -25,6 +28,7 @@ function Test-ManagerUpdate {
             [void][System.Management.Automation.Language.Parser]::ParseFile($temporary, [ref]$tokens, [ref]$parseErrors)
             if ($parseErrors.Count) { throw 'Downloaded PowerShell script is invalid.' }
             [IO.File]::Replace($temporary, $destination, $null)
+            $script:AvailableUpdateVersion = $null
             Write-Host $(if ($script:Language -eq 'de') { "Version v$newVersion installiert. Beim nächsten Start aktiv." } else { "Installed v$newVersion. It will run on the next launch." })
         } finally {
             if ([IO.File]::Exists($temporary)) { [IO.File]::Delete($temporary) }
@@ -651,7 +655,15 @@ function Format-TargetAddress($target) {
 
 function Show-TargetMenu($targets, $total, $filter, $width) {
     Write-Host ''
-    Write-MenuText 'SSH-Manager' $width Cyan
+    Write-MenuText "SSH-Manager · v$script:ManagerVersion" $width Cyan
+    if ($script:AvailableUpdateVersion) {
+        $notice = if ($script:Language -eq 'de') {
+            "Veraltete Version! Update v$script:AvailableUpdateVersion verfügbar."
+        } else {
+            "Outdated version! Update v$script:AvailableUpdateVersion available."
+        }
+        Write-MenuText $notice $width Yellow
+    }
     if ($filter) { Write-MenuText ('Suche "{0}" · {1} von {2}' -f $filter, $targets.Count, $total) $width }
     else { Write-MenuText "SSH-Ziele ($total)" $width }
     Write-Host ''

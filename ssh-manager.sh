@@ -8,9 +8,11 @@ width=80
 
 # Must match the latest published stable release when tagging a new version.
 manager_version=0.3.1
+available_update_version=''
 manager_script=${BASH_SOURCE[0]}
 
 check_update() {
+    available_update_version=''
     local release tag version latest answer dest temporary url
     release=$(curl -fsSL --max-time 5 -H 'Accept: application/vnd.github+json' -H 'User-Agent: SSH-Manager' 'https://api.github.com/repos/eb-88/SSH-Manager/releases/latest' 2>/dev/null) || return 0
     tag=$(jq -r '.tag_name // ""' <<< "$release" 2>/dev/null) || return 0
@@ -18,6 +20,7 @@ check_update() {
     version=${tag#v}
     latest=$(printf '%s\n%s\n' "$manager_version" "$version" | sort -V | tail -n 1)
     [[ $latest == "$version" && $version != "$manager_version" ]] || return 0
+    available_update_version=$version
     if [[ $language == de ]]; then
         ask "Version v$version verfügbar (installiert: v$manager_version). Jetzt installieren? [j/N]" || return 0
     else
@@ -34,6 +37,7 @@ check_update() {
         bash -n "$temporary" &&
         chmod --reference="$dest" "$temporary" &&
         mv -f -- "$temporary" "$dest"; then
+        available_update_version=''
         if [[ $language == de ]]; then
             menu_text "Version v$version installiert. Beim nächsten Start aktiv."
         else
@@ -704,7 +708,14 @@ show_targets() {
     local total=$1 filter=$2 row fields name server user port login endpoint label line number=0
     shift 2
     printf '\n'
-    menu_text SSH-Manager
+    menu_text "SSH-Manager · v$manager_version"
+    if [[ -n $available_update_version ]]; then
+        if [[ $language == de ]]; then
+            menu_text "Veraltete Version! Update v$available_update_version verfügbar."
+        else
+            menu_text "Outdated version! Update v$available_update_version available."
+        fi
+    fi
     if [[ -n $filter ]]; then menu_text "Suche „$filter“ · $# von $total"; else menu_text "SSH-Ziele ($total)"; fi
     printf '\n'
     for row in "$@"; do

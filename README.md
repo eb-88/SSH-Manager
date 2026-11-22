@@ -28,6 +28,9 @@ Running the installation command again offers an update of the existing checkout
 
 ## Updates
 
+The main menu always shows the installed script version. If you decline an offered newer release or its installation fails, the menu displays an **Outdated version** warning with the available version. A successful install takes effect on the next start.
+
+
 On each launch, SSH Manager checks the latest stable GitHub release. If a newer version exists, it asks before replacing the installed script. The new version takes effect on the next launch. A failed check does not prevent SSH Manager from starting, and stored SSH targets and keys are not changed. The script's install directory must be writable; Bash update checks use `curl` and GNU `sort`.
 
 ## Terminal language
