@@ -28,7 +28,7 @@ irm https://raw.githubusercontent.com/eb-88/SSH-Manager/main/install.ps1 | iex
 
 Auch unter PowerShell fragt der Installationsbefehl bei einer vorhandenen Installation vor einem Update nach.
 
-Bestätige beim ersten Start mit **y** (oder **j**), damit du `SSH-Manager` aus jedem Ordner aufrufen kannst. Zusätzlich stehen `SSHM` und `sshm` als Kurzaufrufe zur Verfügung (PowerShell unterscheidet nicht zwischen Groß- und Kleinschreibung). Bestehende Module werden beim nächsten Start des aktualisierten Skripts ergänzt; starte PowerShell neu, damit der neue Befehl erkannt wird. Lass den Installationsordner an seinem Platz, damit die Befehle das Skript finden.
+Bestätige beim ersten Start mit **y** (oder **j**), damit du `SSH-Manager` aus jedem Ordner aufrufen kannst. Zusätzlich stehen `SSHM` und `sshm` als Kurzaufrufe zur Verfügung (PowerShell unterscheidet nicht zwischen Groß- und Kleinschreibung). Bestehende Module werden beim nächsten Start des aktualisierten Skripts ergänzt. `sshm` funktioniert anschließend direkt in derselben PowerShell-Sitzung; ein Neustart des Terminals ist nicht nötig. Lass den Installationsordner an seinem Platz, damit die Befehle das Skript finden.
 
 ## Sprache im Terminal
 
