@@ -6,13 +6,13 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Version tag (for example v0.3.1)
+        description: Version tag (for example v0.3.2)
         required: true
         type: string
 
 jobs:
   publish:
-    if: "${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'chore(release): publish v0.3.1') }}"
+    if: "${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'chore(release): publish v0.3.2') }}"
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -28,20 +28,19 @@ jobs:
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || 'v0.3.1' }}
+          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || 'v0.3.2' }}
         run: |
           set -euo pipefail
           notes=$(cat <<'NOTES'
-          SSH Manager v0.3.1 improves repeat installations on Linux and PowerShell.
+          SSH Manager v0.3.2 displays the installed version and warns about available updates.
 
-          - Running the installer again detects an existing installation and offers to update it.
-          - Declining an update preserves the existing installation without changes.
-          - Updates use Git fast-forward pulls and stop safely if the checkout is not valid.
-          - Linux refreshes the installed command after a successful update.
-          - SSH targets and keys are preserved.
-          - Added Linux installer regression tests alongside existing Bash and PowerShell tests.
+          - Show the currently installed version in the main menu on Bash and PowerShell.
+          - Keep a visible, localized outdated-version notice when a newer release is declined.
+          - Show the notice if an attempted update fails; clear it after a successful update.
+          - Keep startup usable offline and preserve saved SSH targets and keys.
+          - Add regression tests for the version indicator and update status in English and German.
 
-          [Changes since v0.3.0](https://github.com/eb-88/SSH-Manager/compare/v0.3.0...v0.3.1)
+          [Changes since v0.3.1](https://github.com/eb-88/SSH-Manager/compare/v0.3.1...v0.3.2)
           NOTES
           )
           gh release create "$TAG" \
