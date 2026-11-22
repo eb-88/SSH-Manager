@@ -7,7 +7,7 @@ store="$HOME/.ssh/ssh-manager"
 width=80
 
 # Must match the latest published stable release when tagging a new version.
-manager_version=0.3.3
+manager_version=0.3.4
 available_update_version=''
 manager_script=${BASH_SOURCE[0]}
 
