@@ -40,7 +40,9 @@ bash "$root/install.sh" > "$scratch/screen"
 [[ $(readlink "$short_lower") == ssh-manager && $(readlink "$short_upper") == ssh-manager ]]
 MOCK_LOG="$scratch/alias-log" "$short_lower"
 MOCK_LOG="$scratch/alias-log" "$short_upper"
-[[ $(cat "$scratch/alias-log") == 
+[[ $(grep -cx v1 "$scratch/alias-log") -eq 2 ]]
+[[ $(cat "$MOCK_LOG") == v1 ]]
+
 mkdir -p "$HOME/.ssh/ssh-manager"
 printf 'preserve me\n' > "$HOME/.ssh/ssh-manager/language"
 printf 'n\n' | bash "$root/install.sh" > "$scratch/screen" 2>&1
@@ -53,83 +55,7 @@ printf 'y\n' | bash "$root/install.sh" > "$scratch/screen" 2>&1
 grep -Fq "v2" "$launcher"
 MOCK_LOG="$scratch/updated-alias-log" "$short_lower"
 MOCK_LOG="$scratch/updated-alias-log" "$short_upper"
-[[ $(cat "$scratch/updated-alias-log") == 
-if printf 'y\n' | MOCK_FAIL_PULL=1 bash "$root/install.sh" > "$scratch/screen" 2>&1; then
-    echo 'Failed git update incorrectly succeeded' >&2
-    exit 1
-fi
-grep -Fq "v2" "$launcher"
-[[ $(cat "$MOCK_LOG") == $'v1\nv2' ]]
-
-rm -rf -- "$checkout/.git"
-if printf 'y\n' | bash "$root/install.sh" > "$scratch/screen" 2>&1; then
-    echo 'Non-Git directory was overwritten' >&2
-    exit 1
-fi
-grep -Fq 'not an SSH Manager Git checkout' "$scratch/screen"
-[[ $(cat "$MOCK_LOG") == $'v1\nv2' ]]
-printf 'Installer tests passed.\n'
-v1\nv1' ]]
-[[ $(cat "$MOCK_LOG") == v1 ]]
-
-mkdir -p "$HOME/.ssh/ssh-manager"
-printf 'preserve me\n' > "$HOME/.ssh/ssh-manager/language"
-printf 'n\n' | bash "$root/install.sh" > "$scratch/screen" 2>&1
-grep -Fq 'not changed' "$scratch/screen"
-[[ $(cat "$MOCK_LOG") == v1 ]]
-grep -Fq "v1" "$launcher"
-
-printf 'y\n' | bash "$root/install.sh" > "$scratch/screen" 2>&1
-[[ $(cat "$MOCK_LOG") == $'v1\nv2' ]]
-grep -Fq "v2" "$launcher"
-[[ $(cat "$HOME/.ssh/ssh-manager/language") == 'preserve me' ]]
-
-if printf 'y\n' | MOCK_FAIL_PULL=1 bash "$root/install.sh" > "$scratch/screen" 2>&1; then
-    echo 'Failed git update incorrectly succeeded' >&2
-    exit 1
-fi
-grep -Fq "v2" "$launcher"
-[[ $(cat "$MOCK_LOG") == $'v1\nv2' ]]
-
-rm -rf -- "$checkout/.git"
-if printf 'y\n' | bash "$root/install.sh" > "$scratch/screen" 2>&1; then
-    echo 'Non-Git directory was overwritten' >&2
-    exit 1
-fi
-grep -Fq 'not an SSH Manager Git checkout' "$scratch/screen"
-[[ $(cat "$MOCK_LOG") == $'v1\nv2' ]]
-printf 'Installer tests passed.\n'
-v2\nv2' ]]
-[[ $(cat "$HOME/.ssh/ssh-manager/language") == 'preserve me' ]]
-
-if printf 'y\n' | MOCK_FAIL_PULL=1 bash "$root/install.sh" > "$scratch/screen" 2>&1; then
-    echo 'Failed git update incorrectly succeeded' >&2
-    exit 1
-fi
-grep -Fq "v2" "$launcher"
-[[ $(cat "$MOCK_LOG") == $'v1\nv2' ]]
-
-rm -rf -- "$checkout/.git"
-if printf 'y\n' | bash "$root/install.sh" > "$scratch/screen" 2>&1; then
-    echo 'Non-Git directory was overwritten' >&2
-    exit 1
-fi
-grep -Fq 'not an SSH Manager Git checkout' "$scratch/screen"
-[[ $(cat "$MOCK_LOG") == $'v1\nv2' ]]
-printf 'Installer tests passed.\n'
-v1\nv1' ]]
-[[ $(cat "$MOCK_LOG") == v1 ]]
-
-mkdir -p "$HOME/.ssh/ssh-manager"
-printf 'preserve me\n' > "$HOME/.ssh/ssh-manager/language"
-printf 'n\n' | bash "$root/install.sh" > "$scratch/screen" 2>&1
-grep -Fq 'not changed' "$scratch/screen"
-[[ $(cat "$MOCK_LOG") == v1 ]]
-grep -Fq "v1" "$launcher"
-
-printf 'y\n' | bash "$root/install.sh" > "$scratch/screen" 2>&1
-[[ $(cat "$MOCK_LOG") == $'v1\nv2' ]]
-grep -Fq "v2" "$launcher"
+[[ $(grep -cx v2 "$scratch/updated-alias-log") -eq 2 ]]
 [[ $(cat "$HOME/.ssh/ssh-manager/language") == 'preserve me' ]]
 
 if printf 'y\n' | MOCK_FAIL_PULL=1 bash "$root/install.sh" > "$scratch/screen" 2>&1; then
