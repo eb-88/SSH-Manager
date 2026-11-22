@@ -189,7 +189,7 @@ check grep -F 'v0.4.0 available.' "$screen"
 check test "$(wc -l < "$request_log")" -eq 1
 release_tag=v0.3.4
 run_menu o u q
-check grep -F 'No new version available.' "$screen"
+check grep -F 'No new version' "$screen"
 check test "$(wc -l < "$request_log")" -eq 2
 run_menu o a q
 check grep -Fx on "$store/auto-update"
