@@ -6,13 +6,13 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Version tag (for example v0.2.1)
+        description: Version tag (for example v0.3.0)
         required: true
         type: string
 
 jobs:
   publish:
-    if: "${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'feat: localize SSH Manager terminal in English and German (#3)') }}"
+    if: "${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'chore(release): publish v0.3.0') }}"
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -26,19 +26,20 @@ jobs:
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || 'v0.2.0' }}
+          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || 'v0.3.0' }}
         run: |
           set -euo pipefail
           notes=$(cat <<'NOTES'
-          SSH Manager now supports English and German throughout its PowerShell and Bash terminal interfaces.
+          SSH Manager v0.3.0 adds an opt-in self-update flow to PowerShell and Bash.
 
-          - English is the default language.
-          - Choose English or German in Options → G, without restarting.
-          - The language setting is saved locally and can be overridden with SSH_MANAGER_LANG=en or SSH_MANAGER_LANG=de.
-          - Existing SSH targets, stored login methods, and JSON imports/exports remain compatible.
-          - Both Bash and PowerShell regression suites pass on the GitHub Actions Ubuntu runner.
+          - Check the latest stable GitHub release on each launch.
+          - Show a German or English installation prompt when a newer version is available.
+          - Install updates only after approval; use the new version on the next launch.
+          - Preserve saved SSH targets and keys; keep running if GitHub is unavailable.
+          - Validate downloaded scripts before replacing the local executable.
+          - Extend Bash and PowerShell regression tests for version checks and update handling.
 
-          [Changes since v0.1.1](https://github.com/eb-88/SSH-Manager/compare/v0.1.1...v0.2.0)
+          [Changes since v0.2.0](https://github.com/eb-88/SSH-Manager/compare/v0.2.0...v0.3.0)
           NOTES
           )
           gh release create "$TAG" \
