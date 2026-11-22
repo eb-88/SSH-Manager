@@ -171,3 +171,31 @@ check test ! -s "$screen"
 check test -z "$available_update_version"
 check grep -Fx manager_version=0.4.0 "$manager_script"
 printf 'Update-Tests bestanden.\n'
+# Automatic updates are on by default, but a stored preference must suppress startup HTTP calls.
+check auto_updates_enabled
+run_menu o a q
+check grep -Fx off "$store/auto-update"
+if auto_updates_enabled; then exit 1; fi
+request_log="$scratch/update-requests"
+curl() {
+    printf '%s\n' "$*" >> "$request_log"
+    printf '{"tag_name":"%s"}\n' "$release_tag"
+}
+release_tag=v0.4.0
+run_menu q
+check test ! -f "$request_log"
+run_menu o u n q
+check grep -F 'Outdated version! Update v0.4.0 available.' "$screen"
+check test "$(wc -l < "$request_log")" -eq 1
+release_tag=v0.3.4
+run_menu o u q
+check grep -F 'No new version available.' "$screen"
+check test "$(wc -l < "$request_log")" -eq 2
+run_menu o a q
+check grep -Fx on "$store/auto-update"
+check auto_updates_enabled
+release_tag=v0.4.0
+run_menu n q
+check test "$(wc -l < "$request_log")" -eq 3
+check grep -F 'Outdated version!' "$screen"
+printf 'Update preference tests passed.\n'
