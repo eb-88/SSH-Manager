@@ -67,7 +67,7 @@ try {
     function Invoke-WebRequest {
         param($Uri, $OutFile, $TimeoutSec, [switch]$UseBasicParsing)
         $replacement = [IO.File]::ReadAllText($source).Replace(
-            '$script:ManagerVersion = ''0.3.5''', '$script:ManagerVersion = ''0.4.0''')
+            '$script:ManagerVersion = ''0.3.6''', '$script:ManagerVersion = ''0.4.0''')
         [IO.File]::WriteAllText($OutFile, $replacement)
     }
     Test-ManagerUpdate
