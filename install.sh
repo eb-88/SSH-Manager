@@ -24,5 +24,14 @@ else
     git clone --depth 1 "$repository" "$checkout"
 fi
 
+# Keep the original command and provide short, case-sensitive Bash entry points.
+for alias in sshm SSHM; do
+    if [[ -e "${launcher%/*}/$alias" && ! -L "${launcher%/*}/$alias" ]]; then
+        printf 'Cannot install shortcut: %s already exists.\n' "${launcher%/*}/$alias" >&2
+        exit 1
+    fi
+done
 install -Dm755 "$checkout/ssh-manager.sh" "$launcher"
+ln -sfn -- ssh-manager "${launcher%/*}/sshm"
+ln -sfn -- ssh-manager "${launcher%/*}/SSHM"
 exec "$launcher"
