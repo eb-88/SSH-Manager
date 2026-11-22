@@ -53,6 +53,8 @@ Mit **O** öffnest du das Menü `Optionen`. **Enter** bringt dich von dort zurü
 | Eingabe | Menüpunkt | Aktion |
 | --- | --- | --- |
 | **N** | Neu | Ein Ziel hinzufügen. |
+| **A** | Automatische Updates | Automatische Updateprüfung beim Start ein- oder ausschalten (standardmäßig ein). |
+| **U** | Nach Updates suchen | Manuell nach einem GitHub-Release suchen und ein angebotenes Update installieren. |
 | **S** | Suchen | Live-Volltextsuche über Kurzname, Host, Benutzer, Port und Anmeldeart. Die Treffer aktualisieren sich bei jedem Tastendruck; mehrere Wörter können unterschiedliche Felder treffen. **Enter** übernimmt den Filter, **Esc** bricht ab und **Backspace** löscht Zeichen. Ein leerer Suchbegriff mit Enter zeigt wieder alle Ziele. Ohne interaktives Terminal bleibt die normale Zeileneingabe erhalten. |
 | **B** | Bearbeiten | Ein Ziel zum Bearbeiten auswählen. Beim Umbenennen bleibt der Schlüssel zugeordnet. Änderst du nur den Port, übernimmst du mit Enter den bisherigen Schlüssel. Der Manager prüft ihn beim nächsten Verbindungsaufbau am neuen Port. Mit **n** richtest du einen anderen ein. |
 | **L** | Löschen | Ein Ziel auswählen und mit **j** aus der Liste entfernen. |
@@ -69,4 +71,4 @@ Die Zielprofile liegen als `ziel-*.json` in `~/.ssh/ssh-manager/` in deinem Benu
 Das Hauptmenü zeigt stets die installierte Skriptversion an. Wenn du eine neuere Version ablehnst oder das Update fehlschlägt, erscheint im Menü ein Hinweis **Veraltete Version** mit der verfügbaren Version. Ein erfolgreiches Update wird beim nächsten Start aktiv.
 
 
-Bei jedem Start prüft SSH Manager das neueste stabile GitHub-Release und fragt vor der Installation. Die neue Version wird beim nächsten Start aktiv. SSH-Ziele und Schlüssel bleiben erhalten. Das Skriptverzeichnis muss beschreibbar sein; Bash verwendet `curl` und GNU `sort`.
+Automatische Updateprüfungen sind **standardmäßig aktiviert**. Unter **O → A** kannst du sie dauerhaft deaktivieren oder wieder aktivieren. Über **O → U** kannst du jederzeit manuell nach einem neuen GitHub-Release suchen und die Installation bestätigen – auch wenn die automatische Prüfung deaktiviert ist. Die Einstellung wird unter `~/.ssh/ssh-manager/auto-update` gespeichert und von PowerShell und Bash im selben Benutzerverzeichnis gemeinsam verwendet. Updates sind beim nächsten Start aktiv; SSH-Ziele und Schlüssel bleiben erhalten. Das Skriptverzeichnis muss beschreibbar sein; Bash verwendet `curl` und GNU `sort`.

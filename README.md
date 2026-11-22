@@ -31,7 +31,7 @@ Running the installation command again offers an update of the existing checkout
 The main menu always shows the installed script version. If you decline an offered newer release or its installation fails, the menu displays an **Outdated version** warning with the available version. A successful install takes effect on the next start.
 
 
-On each launch, SSH Manager checks the latest stable GitHub release. If a newer version exists, it asks before replacing the installed script. The new version takes effect on the next launch. A failed check does not prevent SSH Manager from starting, and stored SSH targets and keys are not changed. The script's install directory must be writable; Bash update checks use `curl` and GNU `sort`.
+Automatic update checks are **enabled by default**. When enabled, SSH Manager checks the latest stable GitHub release at startup and asks before installing a newer version. Under **O → A**, toggle automatic checks on or off. Under **O → U**, manually check for updates and choose whether to install one, even when automatic checks are disabled. The preference is saved in `~/.ssh/ssh-manager/auto-update` and is shared between PowerShell and Bash on the same home directory. Updates take effect on the next launch; saved SSH targets and keys remain unchanged. The script's installation directory must be writable; Bash checks use `curl` and GNU `sort`.
 
 ## Terminal language
 
@@ -56,6 +56,8 @@ Enter **O** to open `Options`. Press **Enter** there to return to the overview. 
 | Input | Menu label | Action |
 | --- | --- | --- |
 | **N** | New | Add a target. |
+| **A** | Automatic updates | Toggle automatic startup update checks on or off (default: on). |
+| **U** | Check for updates | Manually check GitHub for a new release and offer installation. |
 | **S** | Search | Live full-text search across names, hosts, usernames, ports, and login methods. Matches update as you type; multiple words can match different fields. **Enter** applies the filter, **Esc** cancels, and **Backspace** deletes characters. Clear the term and press Enter to show all targets. In non-interactive terminals, enter a complete search term as before. |
 | **B** | Edit | Select a target to edit. Renaming a target preserves its key. If only the port changes, press Enter to keep the key and verify it on the new port at the next connection, or choose **n** to set up a different one. |
 | **L** | Delete | Select a target and confirm with **y** to remove it from the list. |

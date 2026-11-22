@@ -7,14 +7,20 @@ $script:ManagerScriptPath = $PSCommandPath
 # Match version to latest stable release.
 $script:ManagerVersion = '0.3.4'
 $script:AvailableUpdateVersion = $null
-function Test-ManagerUpdate {
+function Test-ManagerUpdate([switch]$Manual) {
     $script:AvailableUpdateVersion = $null
     try {
         $release = Invoke-RestMethod -Uri 'https://api.github.com/repos/eb-88/SSH-Manager/releases/latest' -TimeoutSec 5 -Headers @{ 'User-Agent' = 'SSH-Manager' }
         $tag = [string]$release.tag_name
-        if ($tag -notmatch '^v[0-9]+[.][0-9]+[.][0-9]+$') { return }
+        if ($tag -notmatch '^v[0-9]+[.][0-9]+[.][0-9]+$') {
+            if ($Manual) { Write-MenuText 'Updateprüfung fehlgeschlagen.' }
+            return
+        }
         $newVersion = $tag.Substring(1)
-        if ([version]$newVersion -le [version]$script:ManagerVersion) { return }
+        if ([version]$newVersion -le [version]$script:ManagerVersion) {
+            if ($Manual) { Write-MenuText 'Keine neue Version verfügbar.' }
+            return
+        }
         $script:AvailableUpdateVersion = $newVersion
         $prompt = if ($script:Language -eq 'de') { "Version v$newVersion verfügbar (installiert: v$script:ManagerVersion). Jetzt installieren? [j/N]" } else { "Version v$newVersion available (installed: v$script:ManagerVersion). Install now? [y/N]" }
         if ((Read-Host $prompt) -notin 'y', 'yes', 'j', 'ja') { return }
@@ -155,6 +161,13 @@ $script:English = @{
     ''' gelöscht.' = ''' deleted.'
     'SSH-Ziele (' = 'SSH targets ('
     '[G] Sprache' = '[G] Language'
+    '[A] Automatische Updates: Ein' = '[A] Automatic updates: On'
+    '[A] Automatische Updates: Aus' = '[A] Automatic updates: Off'
+    '[U] Jetzt nach Updates suchen' = '[U] Check for updates now'
+    'Automatische Updates aktiviert.' = 'Automatic updates enabled.'
+    'Automatische Updates deaktiviert.' = 'Automatic updates disabled.'
+    'Keine neue Version verfügbar.' = 'No new version available.'
+    'Updateprüfung fehlgeschlagen.' = 'Could not check for updates.'
     ' übernommen' = ' imported'
     'Verbinde · ' = 'Connecting · '
     'Verbindung' = 'Connection'
@@ -194,6 +207,15 @@ function Set-Language([string]$value) {
     $script:Language = $value
 }
 Initialize-Language
+
+function Get-AutoUpdateEnabled {
+    $path = Join-Path $store 'auto-update'
+    -not ([IO.File]::Exists($path) -and [IO.File]::ReadAllText($path).Trim() -eq 'off')
+}
+function Set-AutoUpdateEnabled([bool]$enabled) {
+    [void][IO.Directory]::CreateDirectory($store)
+    [IO.File]::WriteAllText((Join-Path $store 'auto-update'), $(if ($enabled) { 'on' } else { 'off' }))
+}
 
 function Assert-TargetField($field, $value) {
     if ($value -is [array]) { throw 'Bitte einen einzelnen Wert eingeben.' }
@@ -739,12 +761,14 @@ function Read-ManagerOption($width) {
     Write-MenuText '[N] Neu   [B] Bearbeiten   [L] Löschen' $width
     Write-MenuText '[S] Suchen   [I] Import   [E] Export' $width
     Write-MenuText '[G] Sprache' $width
+    Write-MenuText $(if (Get-AutoUpdateEnabled) { '[A] Automatische Updates: Ein' } else { '[A] Automatische Updates: Aus' }) $width
+    Write-MenuText '[U] Jetzt nach Updates suchen' $width
     Write-MenuText '[Enter] Zurück' $width
     while ($true) {
         $inputText = Read-MenuInput 'Option' $width
         if ($null -eq $inputText) { return }
         $action = $inputText.Trim()
-        if ($action -in '', 'N', 'B', 'L', 'S', 'I', 'E', 'G') { return $action }
+        if ($action -in '', 'N', 'B', 'L', 'S', 'I', 'E', 'G', 'A', 'U') { return $action }
         Write-MenuText 'Bitte eine angezeigte Option wählen.' $width
     }
 }
@@ -818,6 +842,13 @@ function Start-Manager {
                 $refresh = $true
                 if ($action -eq '') { continue }
             }
+            if ($action -eq 'A') {
+                $enabled = -not (Get-AutoUpdateEnabled)
+                Set-AutoUpdateEnabled $enabled
+                Write-MenuText $(if ($enabled) { 'Automatische Updates aktiviert.' } else { 'Automatische Updates deaktiviert.' }) $width
+                continue
+            }
+            if ($action -eq 'U') { Test-ManagerUpdate -Manual; continue }
             if ($action -eq 'G') {
                 Write-MenuText 'Sprache wählen · [1] Englisch  [2] Deutsch' $width Cyan
                 $languageChoice = Read-MenuInput 'Sprache (Enter zurück)' $width
@@ -897,6 +928,6 @@ function Start-Manager {
 
 if ($MyInvocation.InvocationName -ne '.') {
     try { Initialize-GlobalCommand } catch { Write-Warning (Translate-Text "Globaler Aufruf: $($_.Exception.Message)") }
-    Test-ManagerUpdate
+    if (Get-AutoUpdateEnabled) { Test-ManagerUpdate }
     Start-Manager
 }
