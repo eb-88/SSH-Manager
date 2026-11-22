@@ -6,13 +6,13 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Version tag (for example v0.3.5)
+        description: Version tag (for example v0.3.6)
         required: true
         type: string
 
 jobs:
   publish:
-    if: "${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'chore(release): publish v0.3.5') }}"
+    if: "${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'chore(release): publish v0.3.6') }}"
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -31,19 +31,19 @@ jobs:
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || 'v0.3.5' }}
+          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || 'v0.3.6' }}
         run: |
           set -euo pipefail
           notes=$(cat <<'NOTES'
-          SSH Manager v0.3.5 adds configurable automatic updates and manual update checks.
+          SSH Manager v0.3.6 adds the SSHM/sshm short commands.
 
-          - Disable or re-enable automatic update checks at startup in Options (O -> A).
-          - Check for updates manually and install an available release at any time (O -> U).
-          - Automatic checks stay enabled by default and the preference persists across launches.
-          - Share the preference between PowerShell and Bash when using the same home directory.
-          - Provide German and English labels, no-update feedback, tests and documentation.
+          - Start SSH Manager using SSHM or sshm in PowerShell, alongside SSH-Manager.
+          - Launch from sshm or SSHM on Linux, alongside ssh-manager.
+          - Automatically extend existing PowerShell launcher modules with the short command.
+          - Keep existing commands intact and protect unrelated command names.
+          - Add installation, migration and launcher regression tests plus German and English documentation.
 
-          [Changes since v0.3.4](https://github.com/eb-88/SSH-Manager/compare/v0.3.4...v0.3.5)
+          [Changes since v0.3.5](https://github.com/eb-88/SSH-Manager/compare/v0.3.5...v0.3.6)
           NOTES
           )
           gh release create "$TAG" \

@@ -121,7 +121,7 @@ printf 'Linux-Tests bestanden.\n'
 # Self-update tests: fake GitHub responses and validate installed file replacement.
 manager_script="$scratch/install/ssh-manager.sh"
 mkdir -p -- "${manager_script%/*}"
-printf '#!/usr/bin/env bash\nmanager_version=0.3.5\n' > "$manager_script"
+printf '#!/usr/bin/env bash\nmanager_version=0.3.6\n' > "$manager_script"
 chmod 755 "$manager_script"
 release_tag=v0.4.0
 download_version=0.4.0
@@ -143,24 +143,24 @@ check_update <<< n > "$screen"
 check grep -F 'available' "$screen"
 check test "$available_update_version" = 0.4.0
 show_targets 0 '' > "$screen"
-check grep -F 'SSH-Manager · v0.3.5' "$screen"
+check grep -F 'SSH-Manager · v0.3.6' "$screen"
 check grep -F 'Outdated version! Update v0.4.0 available.' "$screen"
 language=de
 show_targets 0 '' > "$screen"
 check grep -F 'Veraltete Version! Update v0.4.0 verfügbar.' "$screen"
 language=en
-check grep -Fx manager_version=0.3.5 "$manager_script"
+check grep -Fx manager_version=0.3.6 "$manager_script"
 download_version=0.5.0
 check_update <<< y > "$screen"
 check grep -F 'Update failed' "$screen"
 check test "$available_update_version" = 0.4.0
-check grep -Fx manager_version=0.3.5 "$manager_script"
+check grep -Fx manager_version=0.3.6 "$manager_script"
 download_version=0.4.0
 check_update <<< y > "$screen"
 check grep -F 'Installed v0.4.0' "$screen"
 check test -z "$available_update_version"
 check grep -Fx manager_version=0.4.0 "$manager_script"
-release_tag=v0.3.5
+release_tag=v0.3.6
 check_update > "$screen"
 check test ! -s "$screen"
 check test -z "$available_update_version"
@@ -187,7 +187,7 @@ check test ! -f "$request_log"
 run_menu o u n q
 check grep -F 'v0.4.0 available.' "$screen"
 check test "$(wc -l < "$request_log")" -eq 1
-release_tag=v0.3.5
+release_tag=v0.3.6
 run_menu o u q
 check grep -F 'No new version' "$screen"
 check test "$(wc -l < "$request_log")" -eq 2
