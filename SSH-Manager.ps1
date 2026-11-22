@@ -29,7 +29,7 @@ function Test-ManagerUpdate {
             $tokens = $null; $parseErrors = $null
             [void][System.Management.Automation.Language.Parser]::ParseFile($temporary, [ref]$tokens, [ref]$parseErrors)
             if ($parseErrors.Count) { throw 'Downloaded PowerShell script is invalid.' }
-            [IO.File]::Replace($temporary, $destination, $null)
+            [IO.File]::Replace($temporary, $destination, [NullString]::Value)
             $script:AvailableUpdateVersion = $null
             Write-Host $(if ($script:Language -eq 'de') { "Version v$newVersion installiert. Beim nächsten Start aktiv." } else { "Installed v$newVersion. It will run on the next launch." })
         } finally {
