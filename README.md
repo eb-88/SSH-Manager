@@ -11,20 +11,20 @@ SSH-Manager saves your SSH destinations in a terminal menu that runs in PowerShe
 Requires Bash 4.4 or later, Git, `jq` 1.6 or later, `curl`, the OpenSSH client, and `flock` from util-linux. On Debian and Ubuntu, run `sudo apt install git jq curl openssh-client util-linux` if needed.
 
 ```bash
-git clone --depth 1 https://github.com/eb-88/SSH-Manager.git "$HOME/.local/share/ssh-manager" && install -Dm755 "$HOME/.local/share/ssh-manager/ssh-manager.sh" "$HOME/.local/bin/ssh-manager" && "$HOME/.local/bin/ssh-manager"
+curl -fsSL https://raw.githubusercontent.com/eb-88/SSH-Manager/main/install.sh | bash
 ```
 
-To start it again, run `~/.local/bin/ssh-manager`, or just `ssh-manager` if `~/.local/bin` is on your `PATH`.
+Running the installation command again detects the existing checkout and asks before updating it. If you decline, no files are changed. A failed Git pull does not overwrite existing files. To start it again, run `~/.local/bin/ssh-manager`, or just `ssh-manager` if `~/.local/bin` is on your `PATH`.
 
 ### PowerShell
 
 Requires Windows PowerShell 5.1 or PowerShell 7, Git, and the OpenSSH commands `ssh` and `ssh-keygen`.
 
 ```powershell
-git clone --depth 1 https://github.com/eb-88/SSH-Manager.git "$HOME/SSH-Manager"; if ($LASTEXITCODE -eq 0) { & "$HOME/SSH-Manager/SSH-Manager.ps1" }
+irm https://raw.githubusercontent.com/eb-88/SSH-Manager/main/install.ps1 | iex
 ```
 
-When prompted, enter **j** to register `SSH-Manager` for your account. Keep the installed folder in place so the command can find the script.
+Running the installation command again offers an update of the existing checkout (only after confirmation). When prompted on first installation, enter **j** to register `SSH-Manager` for your account. Keep the installed folder in place so the command can find the script.
 
 ## Updates
 
