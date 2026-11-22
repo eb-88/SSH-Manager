@@ -56,7 +56,7 @@ Enter **O** to open `Options`. Press **Enter** there to return to the overview. 
 | Input | Menu label | Action |
 | --- | --- | --- |
 | **N** | New | Add a target. |
-| **S** | Search | Filter by name, host, username, or port. Leave the search term blank to show all targets again. |
+| **S** | Search | Live full-text search across names, hosts, usernames, ports, and login methods. Matches update as you type; multiple words can match different fields. **Enter** applies the filter, **Esc** cancels, and **Backspace** deletes characters. Clear the term and press Enter to show all targets. In non-interactive terminals, enter a complete search term as before. |
 | **B** | Edit | Select a target to edit. Renaming a target preserves its key. If only the port changes, press Enter to keep the key and verify it on the new port at the next connection, or choose **n** to set up a different one. |
 | **L** | Delete | Select a target and confirm with **y** to remove it from the list. |
 | **I** | Import | Load targets from an exported JSON file. Targets with existing names are skipped. |
