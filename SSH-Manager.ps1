@@ -633,18 +633,14 @@ function Get-UserModuleDirectory {
 function Import-ManagerShortCommand([string]$modulePath, [string]$launch) {
     $shortcut = Get-Command SSHM -ErrorAction SilentlyContinue
     if ($shortcut) {
-        if ($shortcut.ModuleName -eq 'SSH-Manager' -and $shortcut.Definition.Trim() -ceq $launch) { return }
+        if ($shortcut.CommandType -eq 'Function' -and $shortcut.Definition.Trim() -ceq $launch) { return }
         Write-Warning 'SSHM is already used by another command. Existing command was not changed.'
         return
     }
-    # Updating the .psm1 file does not refresh functions exported by a module
-    # that PowerShell has already loaded. Reload it in the caller's session.
-    Import-Module -Name $modulePath -Force -Global -ErrorAction Stop | Out-Null
-    $shortcut = Get-Command SSHM -ErrorAction SilentlyContinue
-    if (-not $shortcut -or $shortcut.ModuleName -ne 'SSH-Manager' -or
-        $shortcut.Definition.Trim() -cne $launch) {
-        throw 'Could not load the SSHM shortcut into this PowerShell session.'
-    }
+    # A loaded PowerShell module keeps its original exported commands even when
+    # its .psm1 file changes. Re-importing it here would discard the running
+    # script's module context, so register the same launcher in the session.
+    Set-Item -Path Function:\global:SSHM -Value ([scriptblock]::Create($launch)) -ErrorAction Stop
 }
 
 function Initialize-GlobalCommand {
@@ -664,7 +660,7 @@ function Initialize-GlobalCommand {
             }
             if ($current -cne $legacyLauncher) { throw "Das Modulverzeichnis ist bereits belegt: $(Split-Path $installed)" }
             $shortcut = Get-Command SSHM -ErrorAction SilentlyContinue
-            if ($shortcut -and -not ($shortcut.ModuleName -eq 'SSH-Manager' -and $shortcut.Definition.Trim() -ceq $launch)) {
+            if ($shortcut -and -not ($shortcut.CommandType -eq 'Function' -and $shortcut.Definition.Trim() -ceq $launch)) {
                 Write-Warning 'SSHM is already used by another command. Existing command was not changed.'
                 return
             }
