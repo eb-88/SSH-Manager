@@ -199,3 +199,47 @@ run_menu n q
 check test "$(wc -l < "$request_log")" -eq 3
 check grep -F 'Outdated version!' "$screen"
 printf 'Update preference tests passed.\n'
+
+# Reproduce upgrading through the built-in self-updater, which does not rerun
+# install.sh. The next normal launch must repair both missing shortcuts.
+original_home=$HOME
+original_manager_script=$manager_script
+export HOME="$scratch/shortcut-home"
+installed_launcher="$HOME/.local/bin/ssh-manager"
+mkdir -p -- "${installed_launcher%/*}"
+cp -- "$(dirname -- "${BASH_SOURCE[0]}")/../ssh-manager.sh" "$installed_launcher"
+chmod 755 "$installed_launcher"
+manager_script="$installed_launcher"
+printf off > "$store/auto-update"
+run_menu q
+check test -L "$HOME/.local/bin/sshm"
+check test -L "$HOME/.local/bin/SSHM"
+check test "$(readlink -- "$HOME/.local/bin/sshm")" = ssh-manager
+check test "$(readlink -- "$HOME/.local/bin/SSHM")" = ssh-manager
+check test -x "$HOME/.local/bin/sshm"
+check test -x "$HOME/.local/bin/SSHM"
+
+# Subsequent launches preserve valid links and never clobber other commands.
+rm -- "$HOME/.local/bin/sshm"
+printf 'unrelated command\n' > "$HOME/.local/bin/sshm"
+run_menu q
+check grep -Fx 'unrelated command' "$HOME/.local/bin/sshm"
+check grep -F 'already in use' "$screen"
+check test -L "$HOME/.local/bin/SSHM"
+rm -- "$HOME/.local/bin/sshm"
+ln -s other-program "$HOME/.local/bin/sshm"
+run_menu q
+check test "$(readlink -- "$HOME/.local/bin/sshm")" = other-program
+
+# Running a checkout or unrelated path must never modify the installed bin.
+rm -- "$HOME/.local/bin/sshm"
+manager_script="$scratch/install/ssh-manager.sh"
+run_menu q
+check test ! -e "$HOME/.local/bin/sshm"
+manager_script="$HOME/.local/bin/SSHM"
+run_menu q
+check test "$(readlink -- "$HOME/.local/bin/sshm")" = ssh-manager
+
+manager_script="$original_manager_script"
+export HOME="$original_home"
+printf 'Linux shortcut migration tests passed.\n'
