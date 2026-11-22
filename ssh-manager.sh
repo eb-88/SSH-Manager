@@ -8,6 +8,7 @@ width=80
 
 # Must match the latest published stable release when tagging a new version.
 manager_version=0.2.0
+manager_script=${BASH_SOURCE[0]}
 
 check_update() {
     local release tag version latest answer dest temporary url
@@ -25,7 +26,7 @@ check_update() {
     fi
     answer=${REPLY,,}
     [[ $answer == y || $answer == yes || $answer == j || $answer == ja ]] || return 0
-    dest=${BASH_SOURCE[1]}
+    dest=$manager_script
     [[ $dest == /* ]] || dest="$PWD/$dest"
     temporary=$(mktemp -- "${dest%/*}/.ssh-manager-update.XXXXXXXX") || return 0
     url="https://raw.githubusercontent.com/eb-88/SSH-Manager/$tag/ssh-manager.sh"
