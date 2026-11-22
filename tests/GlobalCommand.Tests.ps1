@@ -40,6 +40,33 @@ try {
     }
     $output = & (Get-Process -Id $PID).Path -NoProfile -Command $check
     if ($LASTEXITCODE -ne 0 -or ($output -join ' ') -notmatch 'SSH-Ziele') { throw 'Start in einer neuen PowerShell fehlgeschlagen.' }
+    # Simulate the startup updater through the global launcher. The script path must
+    # remain the copied installation path even when the updater runs from a function.
+    if ($script:ManagerScriptPath -cne $source) { throw 'The installed script path was lost after dot-sourcing.' }
+    $answers = [Collections.Queue]::new(@('y'))
+    function Invoke-RestMethod { [pscustomobject]@{ tag_name = 'v0.4.0' } }
+    function Invoke-WebRequest {
+        param($Uri, $OutFile, $TimeoutSec, [switch]$UseBasicParsing)
+        $replacement = [IO.File]::ReadAllText($source).Replace(
+            '$script:ManagerVersion = ''0.3.3''', '$script:ManagerVersion = ''0.4.0''')
+        [IO.File]::WriteAllText($OutFile, $replacement)
+    }
+    Test-ManagerUpdate
+    if ($answers.Count -ne 0 -or $script:AvailableUpdateVersion -or
+        [IO.File]::ReadAllText($source) -cnotmatch '(?m)^\$script:ManagerVersion = ''0\.4\.0''
+} finally {
+    Pop-Location
+    $env:PSModulePath = $previousModulePath
+    [IO.File]::Delete($source)
+    if ([IO.File]::Exists($installed)) { [IO.File]::Delete($installed) }
+    foreach ($directory in (Split-Path $installed), $modules, $scratch) {
+        if ([IO.Directory]::Exists($directory)) { [IO.Directory]::Delete($directory) }
+    }
+}
+) {
+        throw 'Self-update did not replace the installed script launched through the PowerShell module.'
+    }
+    Write-Output 'PowerShell self-update path verified.'
     Write-Output 'Globaler Start erfolgreich geprüft.'
 } finally {
     Pop-Location
