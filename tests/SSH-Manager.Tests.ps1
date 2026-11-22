@@ -322,7 +322,7 @@ try {
     $answers = [Collections.Queue]::new(@('n'))
     Test-ManagerUpdate
     Assert ($answers.Count -eq 0) 'Update decline was not read.'
-    $script:fakeRelease = 'v0.3.0'
+    $script:fakeRelease = 'v0.3.1'
     $answers = [Collections.Queue]::new(@('n'))
     Test-ManagerUpdate
     Assert ($answers.Count -eq 1) 'The current release prompted for installation.'

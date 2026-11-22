@@ -116,7 +116,7 @@ printf 'Linux-Tests bestanden.\n'
 # Self-update tests: fake GitHub responses and validate installed file replacement.
 manager_script="$scratch/install/ssh-manager.sh"
 mkdir -p -- "${manager_script%/*}"
-printf '#!/usr/bin/env bash\nmanager_version=0.3.0\n' > "$manager_script"
+printf '#!/usr/bin/env bash\nmanager_version=0.3.1\n' > "$manager_script"
 chmod 755 "$manager_script"
 release_tag=v0.4.0
 download_version=0.4.0
@@ -136,16 +136,16 @@ curl() {
 language=en
 check_update <<< n > "$screen"
 check grep -F 'available' "$screen"
-check grep -Fx manager_version=0.3.0 "$manager_script"
+check grep -Fx manager_version=0.3.1 "$manager_script"
 download_version=0.5.0
 check_update <<< y > "$screen"
 check grep -F 'Update failed' "$screen"
-check grep -Fx manager_version=0.3.0 "$manager_script"
+check grep -Fx manager_version=0.3.1 "$manager_script"
 download_version=0.4.0
 check_update <<< y > "$screen"
 check grep -F 'Installed v0.4.0' "$screen"
 check grep -Fx manager_version=0.4.0 "$manager_script"
-release_tag=v0.3.0
+release_tag=v0.3.1
 check_update > "$screen"
 check test ! -s "$screen"
 release_tag=v0.5.0

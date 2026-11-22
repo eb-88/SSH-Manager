@@ -6,13 +6,13 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Version tag (for example v0.3.0)
+        description: Version tag (for example v0.3.1)
         required: true
         type: string
 
 jobs:
   publish:
-    if: "${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'chore(release): publish v0.3.0') }}"
+    if: "${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'chore(release): publish v0.3.1') }}"
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -20,26 +20,28 @@ jobs:
       - uses: actions/checkout@v4
       - name: Test Bash
         run: bash tests/ssh-manager-linux.sh
+      - name: Test Linux installer
+        run: bash tests/install-linux.sh
       - name: Test PowerShell
         shell: pwsh
         run: ./tests/SSH-Manager.Tests.ps1
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || 'v0.3.0' }}
+          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || 'v0.3.1' }}
         run: |
           set -euo pipefail
           notes=$(cat <<'NOTES'
-          SSH Manager v0.3.0 adds an opt-in self-update flow to PowerShell and Bash.
+          SSH Manager v0.3.1 improves repeat installations on Linux and PowerShell.
 
-          - Check the latest stable GitHub release on each launch.
-          - Show a German or English installation prompt when a newer version is available.
-          - Install updates only after approval; use the new version on the next launch.
-          - Preserve saved SSH targets and keys; keep running if GitHub is unavailable.
-          - Validate downloaded scripts before replacing the local executable.
-          - Extend Bash and PowerShell regression tests for version checks and update handling.
+          - Running the installer again detects an existing installation and offers to update it.
+          - Declining an update preserves the existing installation without changes.
+          - Updates use Git fast-forward pulls and stop safely if the checkout is not valid.
+          - Linux refreshes the installed command after a successful update.
+          - SSH targets and keys are preserved.
+          - Added Linux installer regression tests alongside existing Bash and PowerShell tests.
 
-          [Changes since v0.2.0](https://github.com/eb-88/SSH-Manager/compare/v0.2.0...v0.3.0)
+          [Changes since v0.3.0](https://github.com/eb-88/SSH-Manager/compare/v0.3.0...v0.3.1)
           NOTES
           )
           gh release create "$TAG" \

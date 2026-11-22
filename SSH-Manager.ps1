@@ -4,7 +4,7 @@ $ErrorActionPreference = 'Stop'
 $store = Join-Path (Join-Path $HOME '.ssh') 'ssh-manager'
 
 # Match version to latest stable release.
-$script:ManagerVersion = '0.3.0'
+$script:ManagerVersion = '0.3.1'
 function Test-ManagerUpdate {
     try {
         $release = Invoke-RestMethod -Uri 'https://api.github.com/repos/eb-88/SSH-Manager/releases/latest' -TimeoutSec 5 -Headers @{ 'User-Agent' = 'SSH-Manager' }
