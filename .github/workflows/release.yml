@@ -6,13 +6,13 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Version tag (for example v0.3.6)
+        description: Version tag (for example v0.3.7)
         required: true
         type: string
 
 jobs:
   publish:
-    if: "${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'chore(release): publish v0.3.6') }}"
+    if: "${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'chore(release): publish v0.3.7') }}"
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -31,19 +31,19 @@ jobs:
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || 'v0.3.6' }}
+          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || 'v0.3.7' }}
         run: |
           set -euo pipefail
           notes=$(cat <<'NOTES'
-          SSH Manager v0.3.6 adds the SSHM/sshm short commands.
+          SSH Manager v0.3.7 fixes SSHM/sshm shortcuts after updating on Windows and Linux.
 
-          - Start SSH Manager using SSHM or sshm in PowerShell, alongside SSH-Manager.
-          - Launch from sshm or SSHM on Linux, alongside ssh-manager.
-          - Automatically extend existing PowerShell launcher modules with the short command.
-          - Keep existing commands intact and protect unrelated command names.
-          - Add installation, migration and launcher regression tests plus German and English documentation.
+          - PowerShell: make the SSHM shortcut available immediately in the current session after updating.
+          - PowerShell: keep the launcher module persistent for new sessions without re-importing the running module.
+          - Linux: automatically create missing sshm and SSHM launchers after in-app self-updates.
+          - Preserve existing commands and never overwrite unrelated shortcuts.
+          - Add upgrade regression tests for Linux and Windows PowerShell 5.1/7.
 
-          [Changes since v0.3.5](https://github.com/eb-88/SSH-Manager/compare/v0.3.5...v0.3.6)
+          [Changes since v0.3.6](https://github.com/eb-88/SSH-Manager/compare/v0.3.6...v0.3.7)
           NOTES
           )
           gh release create "$TAG" \

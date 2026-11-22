@@ -5,7 +5,7 @@ $store = Join-Path (Join-Path $HOME '.ssh') 'ssh-manager'
 $script:ManagerScriptPath = $PSCommandPath
 
 # Match version to latest stable release.
-$script:ManagerVersion = '0.3.6'
+$script:ManagerVersion = '0.3.7'
 $script:AvailableUpdateVersion = $null
 function Test-ManagerUpdate([switch]$Manual) {
     $script:AvailableUpdateVersion = $null

@@ -329,13 +329,13 @@ try {
     Assert ($answers.Count -eq 0 -and $script:AvailableUpdateVersion -eq '0.4.0') 'Declining an update must keep the outdated status.'
     $screen.Clear()
     Show-TargetMenu @(Get-Targets) @(Get-Targets).Count '' 40
-    Assert (($screen -join ' ') -match 'SSH-Manager · v0.3.6' -and ($screen -join ' ') -match 'Veraltete Version! Update v0.4.0 verfügbar') 'Version and outdated notice missing in German menu.'
+    Assert (($screen -join ' ') -match 'SSH-Manager · v0.3.7' -and ($screen -join ' ') -match 'Veraltete Version! Update v0.4.0 verfügbar') 'Version and outdated notice missing in German menu.'
     $script:Language = 'en'
     $screen.Clear()
     Show-TargetMenu @(Get-Targets) @(Get-Targets).Count '' 40
     Assert (($screen -join ' ') -match 'Outdated version! Update v0.4.0 available') 'Outdated notice missing in English menu.'
     $script:Language = 'de'
-    $script:fakeRelease = 'v0.3.6'
+    $script:fakeRelease = 'v0.3.7'
     $answers = [Collections.Queue]::new(@('n'))
     Test-ManagerUpdate
     Assert ($answers.Count -eq 1 -and -not $script:AvailableUpdateVersion) 'The current release prompted for installation or showed as outdated.'
@@ -353,7 +353,7 @@ try {
     Start-Manager
     Assert ($answers.Count -eq 0 -and $script:AvailableUpdateVersion -eq '0.4.0' -and
         ($screen -join ' ') -match 'Update v0.4.0 verfügbar') 'Manual update check was blocked while auto updates were disabled.'
-    $script:fakeRelease = 'v0.3.6'
+    $script:fakeRelease = 'v0.3.7'
     $screen.Clear()
     $answers = [Collections.Queue]::new(@('O','U','Q'))
     Start-Manager
