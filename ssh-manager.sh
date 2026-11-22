@@ -182,6 +182,8 @@ translation_from=(
     'Ziel '\'''
     ' von '
     'Nr'
+    '[Enter] Übernehmen   [Esc] Abbrechen   [Backspace] Löschen'
+    'Suchbegriff: '
 )
 translation_to=(
     'The short name must be 1–64 characters, starting with a letter or digit. Allowed: A–Z, 0–9, period, underscore, and hyphen.'
@@ -309,6 +311,8 @@ translation_to=(
     'Target '\'''
     ' of '
     'No'
+    '[Enter] Apply   [Esc] Cancel   [Backspace] Delete'
+    'Search: '
 )
 init_language() {
     local candidate=${SSH_MANAGER_LANG:-}
@@ -784,6 +788,296 @@ transfer_targets() {
     else
         count=$(export_targets "$path") && menu_text "Export abgeschlossen · $count gespeichert."
     fi
+}
+
+filter_records() {
+    jq -c --arg filter "$2" '
+        ($filter | ascii_downcase | split(" ") | map(select(length > 0))) as $terms
+        | .[] | select(
+            ([.Name, (.User + "@" + .Server + ":" + (.Port | tostring)),
+              .Server, .User, (.Port | tostring), .Login,
+              (if .Login == "Passwort" then "Verwaltet Managed" else "OpenSSH" end)]
+             | join(" ") | ascii_downcase) as $text
+            | all($terms[]; $text | contains(.))
+        )' <<< "$1"
+}
+
+read_live_search() {
+    local records=$1 total=$2 query=$3 key rows
+    local -a matches=()
+    if [[ ! -t 0 || ! -t 1 ]]; then
+        ask 'Suche (Enter setzt zurück)'
+        return $?
+    fi
+    while true; do
+        get_width
+        rows=$(filter_records "$records" "$query") || return 1
+        matches=()
+        if [[ -n $rows ]]; then mapfile -t matches <<< "$rows"; fi
+        printf '\033[H\033[2J'
+        show_targets "$total" "$query" "${matches[@]}" || return 1
+        menu_text '[Enter] Übernehmen   [Esc] Abbrechen   [Backspace] Löschen'
+        translate_text 'Suchbegriff: '
+        printf '%s%s' "$REPLY" "$query"
+        IFS= read -rsn1 key || return 1
+        case $key in
+            '') REPLY=$query; trim; printf '\n'; return 0 ;;
+                local records rows total filter='' action selection index target name status
+    local -a visible=()
+    while true; do
+        get_width
+        records=$(list_records | jq -cs 'sort_by(.Name | ascii_downcase)') || return 1
+        total=$(jq length <<< "$records") || return 1
+        rows=$(filter_records "$records" "$filter") || return 1
+        visible=()
+        if [[ -n $rows ]]; then mapfile -t visible <<< "$rows"; fi
+        show_targets "$total" "$filter" "${visible[@]}" || return 1
+        ask Auswahl || return 0
+        action=''
+        selection=$REPLY
+        case ${REPLY,,} in
+            q) return 0 ;;
+            '') continue ;;
+            o)
+                read_option || return 0
+                action=${REPLY,,}
+                case $action in
+                    '') continue ;;
+                    n) edit_target || true; continue ;;
+                    g)
+                        menu_text 'Sprache wählen · [1] Englisch  [2] Deutsch'
+                        ask 'Sprache (Enter zurück)' || return 0
+                        case $REPLY in
+                            1) set_language en || return 1 ;;
+                            2) set_language de || return 1 ;;
+                            '') ;;
+                            *) menu_text 'Bitte 1 oder 2 wählen.' ;;
+                        esac
+                        continue ;;
+                    s)
+                        if read_live_search "$records" "$total" "$filter"; then
+                            filter=${REPLY//[[:cntrl:]]/}
+                        else
+                            status=$?
+                            ((status == 2)) || return 0
+                        fi
+                        continue ;;
+                    i|e) transfer_targets "$action" || true; continue ;;
+                esac
+                if ((! ${#visible[@]})); then menu_text 'Keine Ziele zur Auswahl.'; continue; fi
+                if [[ $action == b ]]; then
+                    ask 'Bearbeiten · Nr (Enter zurück)' || return 0
+                else
+                    ask 'Löschen · Nr (Enter zurück)' || return 0
+                fi
+                selection=$REPLY
+                [[ -n $selection ]] || continue ;;
+        esac
+        if [[ ! $selection =~ ^[0-9]{1,9}$ ]] || ((10#$selection < 1 || 10#$selection > ${#visible[@]})); then
+            menu_text 'Bitte eine angezeigte Zielnummer eingeben.'
+            continue
+        fi
+        index=$((10#$selection - 1))
+        target=${visible[index]}
+        case $action in
+            b) edit_target "$target" || true ;;
+            l)
+                name=$(jq -r '.Name' <<< "$target") || continue
+                menu_text "Ziel löschen · $name"
+                menu_text 'Lokale Schlüssel und Serverfreigaben bleiben erhalten.'
+                ask 'Ziel löschen? [j/N]' || return 0
+                if [[ ${REPLY,,} == j || ${REPLY,,} == ja || ${REPLY,,} == y || ${REPLY,,} == yes ]]; then
+                    if with_lock "$store/ziele.lock" remove_target "$target"; then menu_text "Ziel '$name' gelöscht."; fi
+                fi ;;
+            *) connect_target "$target" || menu_text 'Keine SSH-Sitzung geöffnet.' ;;
+        esac
+    done
+}
+
+main() {
+    local dependency
+    for dependency in jq ssh ssh-keygen flock; do
+        command -v "$dependency" >/dev/null || { fail "Benötigter Befehl fehlt ($dependency)."; return 1; }
+    done
+    mkdir -p -- "$store" || return 1
+    check_update
+    start_manager
+}
+
+if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
+    main "$@"
+fi
+\e') printf '\n'; return 2 ;;
+                local records rows total filter='' action selection index target name
+    local -a visible=()
+    while true; do
+        get_width
+        records=$(list_records | jq -cs 'sort_by(.Name | ascii_downcase)') || return 1
+        total=$(jq length <<< "$records") || return 1
+        rows=$(jq -c --arg filter "$filter" '
+            .[] | select(([.Name, (.User + "@" + .Server + ":" + (.Port | tostring))] | join(" ") | ascii_downcase)
+                | contains($filter | ascii_downcase))' <<< "$records") || return 1
+        visible=()
+        if [[ -n $rows ]]; then mapfile -t visible <<< "$rows"; fi
+        show_targets "$total" "$filter" "${visible[@]}" || return 1
+        ask Auswahl || return 0
+        action=''
+        selection=$REPLY
+        case ${REPLY,,} in
+            q) return 0 ;;
+            '') continue ;;
+            o)
+                read_option || return 0
+                action=${REPLY,,}
+                case $action in
+                    '') continue ;;
+                    n) edit_target || true; continue ;;
+                    g)
+                        menu_text 'Sprache wählen · [1] Englisch  [2] Deutsch'
+                        ask 'Sprache (Enter zurück)' || return 0
+                        case $REPLY in
+                            1) set_language en || return 1 ;;
+                            2) set_language de || return 1 ;;
+                            '') ;;
+                            *) menu_text 'Bitte 1 oder 2 wählen.' ;;
+                        esac
+                        continue ;;
+                    s)
+                        ask 'Suche (Enter setzt zurück)' || return 0
+                        filter=${REPLY//[[:cntrl:]]/}
+                        continue ;;
+                    i|e) transfer_targets "$action" || true; continue ;;
+                esac
+                if ((! ${#visible[@]})); then menu_text 'Keine Ziele zur Auswahl.'; continue; fi
+                if [[ $action == b ]]; then
+                    ask 'Bearbeiten · Nr (Enter zurück)' || return 0
+                else
+                    ask 'Löschen · Nr (Enter zurück)' || return 0
+                fi
+                selection=$REPLY
+                [[ -n $selection ]] || continue ;;
+        esac
+        if [[ ! $selection =~ ^[0-9]{1,9}$ ]] || ((10#$selection < 1 || 10#$selection > ${#visible[@]})); then
+            menu_text 'Bitte eine angezeigte Zielnummer eingeben.'
+            continue
+        fi
+        index=$((10#$selection - 1))
+        target=${visible[index]}
+        case $action in
+            b) edit_target "$target" || true ;;
+            l)
+                name=$(jq -r '.Name' <<< "$target") || continue
+                menu_text "Ziel löschen · $name"
+                menu_text 'Lokale Schlüssel und Serverfreigaben bleiben erhalten.'
+                ask 'Ziel löschen? [j/N]' || return 0
+                if [[ ${REPLY,,} == j || ${REPLY,,} == ja || ${REPLY,,} == y || ${REPLY,,} == yes ]]; then
+                    if with_lock "$store/ziele.lock" remove_target "$target"; then menu_text "Ziel '$name' gelöscht."; fi
+                fi ;;
+            *) connect_target "$target" || menu_text 'Keine SSH-Sitzung geöffnet.' ;;
+        esac
+    done
+}
+
+main() {
+    local dependency
+    for dependency in jq ssh ssh-keygen flock; do
+        command -v "$dependency" >/dev/null || { fail "Benötigter Befehl fehlt ($dependency)."; return 1; }
+    done
+    mkdir -p -- "$store" || return 1
+    check_update
+    start_manager
+}
+
+if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
+    main "$@"
+fi
+\177'|    local records rows total filter='' action selection index target name
+    local -a visible=()
+    while true; do
+        get_width
+        records=$(list_records | jq -cs 'sort_by(.Name | ascii_downcase)') || return 1
+        total=$(jq length <<< "$records") || return 1
+        rows=$(jq -c --arg filter "$filter" '
+            .[] | select(([.Name, (.User + "@" + .Server + ":" + (.Port | tostring))] | join(" ") | ascii_downcase)
+                | contains($filter | ascii_downcase))' <<< "$records") || return 1
+        visible=()
+        if [[ -n $rows ]]; then mapfile -t visible <<< "$rows"; fi
+        show_targets "$total" "$filter" "${visible[@]}" || return 1
+        ask Auswahl || return 0
+        action=''
+        selection=$REPLY
+        case ${REPLY,,} in
+            q) return 0 ;;
+            '') continue ;;
+            o)
+                read_option || return 0
+                action=${REPLY,,}
+                case $action in
+                    '') continue ;;
+                    n) edit_target || true; continue ;;
+                    g)
+                        menu_text 'Sprache wählen · [1] Englisch  [2] Deutsch'
+                        ask 'Sprache (Enter zurück)' || return 0
+                        case $REPLY in
+                            1) set_language en || return 1 ;;
+                            2) set_language de || return 1 ;;
+                            '') ;;
+                            *) menu_text 'Bitte 1 oder 2 wählen.' ;;
+                        esac
+                        continue ;;
+                    s)
+                        ask 'Suche (Enter setzt zurück)' || return 0
+                        filter=${REPLY//[[:cntrl:]]/}
+                        continue ;;
+                    i|e) transfer_targets "$action" || true; continue ;;
+                esac
+                if ((! ${#visible[@]})); then menu_text 'Keine Ziele zur Auswahl.'; continue; fi
+                if [[ $action == b ]]; then
+                    ask 'Bearbeiten · Nr (Enter zurück)' || return 0
+                else
+                    ask 'Löschen · Nr (Enter zurück)' || return 0
+                fi
+                selection=$REPLY
+                [[ -n $selection ]] || continue ;;
+        esac
+        if [[ ! $selection =~ ^[0-9]{1,9}$ ]] || ((10#$selection < 1 || 10#$selection > ${#visible[@]})); then
+            menu_text 'Bitte eine angezeigte Zielnummer eingeben.'
+            continue
+        fi
+        index=$((10#$selection - 1))
+        target=${visible[index]}
+        case $action in
+            b) edit_target "$target" || true ;;
+            l)
+                name=$(jq -r '.Name' <<< "$target") || continue
+                menu_text "Ziel löschen · $name"
+                menu_text 'Lokale Schlüssel und Serverfreigaben bleiben erhalten.'
+                ask 'Ziel löschen? [j/N]' || return 0
+                if [[ ${REPLY,,} == j || ${REPLY,,} == ja || ${REPLY,,} == y || ${REPLY,,} == yes ]]; then
+                    if with_lock "$store/ziele.lock" remove_target "$target"; then menu_text "Ziel '$name' gelöscht."; fi
+                fi ;;
+            *) connect_target "$target" || menu_text 'Keine SSH-Sitzung geöffnet.' ;;
+        esac
+    done
+}
+
+main() {
+    local dependency
+    for dependency in jq ssh ssh-keygen flock; do
+        command -v "$dependency" >/dev/null || { fail "Benötigter Befehl fehlt ($dependency)."; return 1; }
+    done
+    mkdir -p -- "$store" || return 1
+    check_update
+    start_manager
+}
+
+if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
+    main "$@"
+fi
+\b') [[ -z $query ]] || query=${query%?} ;;
+            *) if [[ $key != [[:cntrl:]] ]]; then query+=$key; fi ;;
+        esac
+    done
 }
 
 start_manager() {
