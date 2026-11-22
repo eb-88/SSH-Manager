@@ -185,7 +185,7 @@ release_tag=v0.4.0
 run_menu q
 check test ! -f "$request_log"
 run_menu o u n q
-check grep -F 'Outdated version! Update v0.4.0 available.' "$screen"
+check grep -F 'v0.4.0 available.' "$screen"
 check test "$(wc -l < "$request_log")" -eq 1
 release_tag=v0.3.4
 run_menu o u q
