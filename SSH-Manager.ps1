@@ -3,6 +3,38 @@
 $ErrorActionPreference = 'Stop'
 $store = Join-Path (Join-Path $HOME '.ssh') 'ssh-manager'
 
+# Match this version to the latest stable GitHub release.
+$script:ManagerVersion = '0.2.0'
+function Test-ManagerUpdate {
+    try {
+        $release = Invoke-RestMethod -Uri 'https://api.github.com/repos/eb-88/SSH-Manager/releases/latest' -TimeoutSec 5 -Headers @{ 'User-Agent' = 'SSH-Manager' }
+        $tag = [string]$release.tag_name
+        $newVersion = $tag.TrimStart('v')
+        if ($tag -ne "v$newVersion" -or -not [version]::TryParse($newVersion, [ref]([version]$null))) { return }
+        if ([version]$newVersion -le [version]$script:ManagerVersion) { return }
+        $prompt = if ($script:Language -eq 'de') { "Version v$newVersion verfügbar (installiert: v$script:ManagerVersion). Jetzt installieren? [j/N]" } else { "Version v$newVersion available (installed: v$script:ManagerVersion). Install now? [y/N]" }
+        if ((Read-Host $prompt) -notin 'y', 'yes', 'j', 'ja') { return }
+        $destination = $PSCommandPath
+        $temporary = Join-Path (Split-Path -Parent $destination) ([IO.Path]::GetRandomFileName())
+        try {
+            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/eb-88/SSH-Manager/$tag/SSH-Manager.ps1" -OutFile $temporary -TimeoutSec 15 -UseBasicParsing
+            $downloaded = [IO.File]::ReadAllText($temporary)
+            $expected = "$([char]36)script:ManagerVersion = '$newVersion'"
+            if (-not ($downloaded.Split([char]10) | Where-Object { $_.Trim() -ceq $expected })) { throw 'Downloaded version mismatch.' }
+            $tokens = $null; $parseErrors = $null
+            [void][System.Management.Automation.Language.Parser]::ParseFile($temporary, [ref]$tokens, [ref]$parseErrors)
+            if ($parseErrors.Count) { throw 'Downloaded PowerShell script is invalid.' }
+            [IO.File]::Copy($temporary, $destination, $true)
+            Write-Host $(if ($script:Language -eq 'de') { "Version v$newVersion installiert. Beim nächsten Start aktiv." } else { "Installed v$newVersion. It will run on the next launch." })
+        } finally {
+            if ([IO.File]::Exists($temporary)) { [IO.File]::Delete($temporary) }
+        }
+    } catch {
+        Write-Warning $(if ($script:Language -eq 'de') { "Update fehlgeschlagen: $($_.Exception.Message)" } else { "Update failed: $($_.Exception.Message)" })
+    }
+}
+
+
 # Display-only localization. Persisted profile and export values never change.
 $script:Language = 'en'
 $script:English = @{
@@ -812,5 +844,6 @@ function Start-Manager {
 
 if ($MyInvocation.InvocationName -ne '.') {
     try { Initialize-GlobalCommand } catch { Write-Warning (Translate-Text "Globaler Aufruf: $($_.Exception.Message)") }
+    Test-ManagerUpdate
     Start-Manager
 }

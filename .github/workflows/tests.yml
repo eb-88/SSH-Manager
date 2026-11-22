@@ -3,7 +3,7 @@ name: Tests
 on:
   push:
     branches:
-      - feature/terminal-localization-en-de
+      - 'feature/**'
   pull_request:
     branches:
       - main
