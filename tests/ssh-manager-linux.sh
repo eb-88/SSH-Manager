@@ -149,10 +149,10 @@ printf 'Linux-Tests bestanden.\n'
 # Self-update tests: fake GitHub responses and validate installed file replacement.
 manager_script="$scratch/install/ssh-manager.sh"
 mkdir -p -- "${manager_script%/*}"
-printf '#!/usr/bin/env bash\nmanager_version=0.3.7\n' > "$manager_script"
+printf '#!/usr/bin/env bash\nmanager_version=0.4.0\n' > "$manager_script"
 chmod 755 "$manager_script"
-release_tag=v0.4.0
-download_version=0.4.0
+release_tag=v0.4.1
+download_version=0.4.1
 curl() {
     local output='' previous='' value
     if [[ " $* " == *'/releases/latest'* ]]; then
@@ -169,26 +169,26 @@ curl() {
 language=en
 check_update <<< n > "$screen"
 check grep -F 'available' "$screen"
-check test "$available_update_version" = 0.4.0
+check test "$available_update_version" = 0.4.1
 show_targets 0 '' > "$screen"
-check grep -F 'SSH-Manager · v0.3.7' "$screen"
-check grep -F 'Outdated version! Update v0.4.0 available.' "$screen"
+check grep -F 'SSH-Manager · v0.4.0' "$screen"
+check grep -F 'Outdated version! Update v0.4.1 available.' "$screen"
 language=de
 show_targets 0 '' > "$screen"
-check grep -F 'Veraltete Version! Update v0.4.0 verfügbar.' "$screen"
+check grep -F 'Veraltete Version! Update v0.4.1 verfügbar.' "$screen"
 language=en
-check grep -Fx manager_version=0.3.7 "$manager_script"
+check grep -Fx manager_version=0.4.0 "$manager_script"
 download_version=0.5.0
 check_update <<< y > "$screen"
 check grep -F 'Update failed' "$screen"
-check test "$available_update_version" = 0.4.0
-check grep -Fx manager_version=0.3.7 "$manager_script"
-download_version=0.4.0
-check_update <<< y > "$screen"
-check grep -F 'Installed v0.4.0' "$screen"
-check test -z "$available_update_version"
+check test "$available_update_version" = 0.4.1
 check grep -Fx manager_version=0.4.0 "$manager_script"
-release_tag=v0.3.7
+download_version=0.4.1
+check_update <<< y > "$screen"
+check grep -F 'Installed v0.4.1' "$screen"
+check test -z "$available_update_version"
+check grep -Fx manager_version=0.4.1 "$manager_script"
+release_tag=v0.4.0
 check_update > "$screen"
 check test ! -s "$screen"
 check test -z "$available_update_version"
@@ -197,7 +197,7 @@ curl() { return 28; }
 check_update > "$screen"
 check test ! -s "$screen"
 check test -z "$available_update_version"
-check grep -Fx manager_version=0.4.0 "$manager_script"
+check grep -Fx manager_version=0.4.1 "$manager_script"
 printf 'Update-Tests bestanden.\n'
 # Automatic updates are on by default, but a stored preference must suppress startup HTTP calls.
 check auto_updates_enabled
@@ -209,20 +209,20 @@ curl() {
     printf '%s\n' "$*" >> "$request_log"
     printf '{"tag_name":"%s"}\n' "$release_tag"
 }
-release_tag=v0.4.0
+release_tag=v0.4.1
 run_menu q
 check test ! -f "$request_log"
 run_menu o u n q
-check grep -F 'v0.4.0 available.' "$screen"
+check grep -F 'v0.4.1 available.' "$screen"
 check test "$(wc -l < "$request_log")" -eq 1
-release_tag=v0.3.7
+release_tag=v0.4.0
 run_menu o u q
 check grep -F 'No new version' "$screen"
 check test "$(wc -l < "$request_log")" -eq 2
 run_menu o a q
 check grep -Fx on "$store/auto-update"
 check auto_updates_enabled
-release_tag=v0.4.0
+release_tag=v0.4.1
 run_menu n q
 check test "$(wc -l < "$request_log")" -eq 3
 check grep -F 'Outdated version!' "$screen"

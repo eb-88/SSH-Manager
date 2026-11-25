@@ -54,7 +54,7 @@ try {
             if ($Prompt -notin 'Auswahl', 'Selection') { exit 15 }
             'Q'
         }
-        function Invoke-RestMethod { [pscustomobject]@{ tag_name = 'v0.3.7' } }
+        function Invoke-RestMethod { [pscustomobject]@{ tag_name = 'v0.4.0' } }
         # Autoload the legacy module; it updates its own file when executed.
         SSH-Manager
         if (-not (Get-Command SSHM -ErrorAction SilentlyContinue)) {
@@ -93,17 +93,17 @@ try {
     # Reproduce updating a script invoked through the global PowerShell command.
     if ($script:ManagerScriptPath -cne $source) { throw 'The script path was lost after dot-sourcing.' }
     $answers = [Collections.Queue]::new(@('y'))
-    function Invoke-RestMethod { [pscustomobject]@{ tag_name = 'v0.4.0' } }
+    function Invoke-RestMethod { [pscustomobject]@{ tag_name = 'v0.4.1' } }
     function Invoke-WebRequest {
         param($Uri, $OutFile, $TimeoutSec, [switch]$UseBasicParsing)
         $replacement = [IO.File]::ReadAllText($source).Replace(
-            '$script:ManagerVersion = ''0.3.7''', '$script:ManagerVersion = ''0.4.0''')
+            '$script:ManagerVersion = ''0.4.0''', '$script:ManagerVersion = ''0.4.1''')
         [IO.File]::WriteAllText($OutFile, $replacement)
     }
     Test-ManagerUpdate
     $updated = [IO.File]::ReadAllText($source)
     if ($answers.Count -ne 0 -or $script:AvailableUpdateVersion -or
-        -not $updated.Contains('$script:ManagerVersion = ''0.4.0''')) {
+        -not $updated.Contains('$script:ManagerVersion = ''0.4.1''')) {
         throw 'Self-update did not replace the installed script launched through the PowerShell module.'
     }
     Write-Output 'PowerShell self-update path verified.'
