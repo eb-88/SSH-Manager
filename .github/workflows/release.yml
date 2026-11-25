@@ -6,13 +6,13 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Version tag (for example v0.3.7)
+        description: Version tag (for example v0.4.0)
         required: true
         type: string
 
 jobs:
   publish:
-    if: "${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'chore(release): publish v0.3.7') }}"
+    if: "${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'chore(release): publish v0.4.0') }}"
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -31,19 +31,17 @@ jobs:
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || 'v0.3.7' }}
+          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || 'v0.4.0' }}
         run: |
           set -euo pipefail
           notes=$(cat <<'NOTES'
-          SSH Manager v0.3.7 fixes SSHM/sshm shortcuts after updating on Windows and Linux.
+          SSH Manager v0.4.0 lets you run local Bash scripts on saved SSH targets from either the PowerShell or Bash manager.
 
-          - PowerShell: make the SSHM shortcut available immediately in the current session after updating.
-          - PowerShell: keep the launcher module persistent for new sessions without re-importing the running module.
-          - Linux: automatically create missing sshm and SSHM launchers after in-app self-updates.
-          - Preserve existing commands and never overwrite unrelated shortcuts.
-          - Add upgrade regression tests for Linux and Windows PowerShell 5.1/7.
+          - Choose **O → R** to select a script and then the server where it should run.
+          - Store scripts in `~/.ssh/ssh-manager/scripts/user/` to run them as the SSH user, or in `~/.ssh/ssh-manager/scripts/root/` to run them as root. The terminal remains available for sudo and script prompts.
+          - Choose **O → D** to open a local shell in the scripts directory. Edit your scripts there and type `exit` to return to the manager.
 
-          [Changes since v0.3.6](https://github.com/eb-88/SSH-Manager/compare/v0.3.6...v0.3.7)
+          [Changes since v0.3.7](https://github.com/eb-88/SSH-Manager/compare/v0.3.7...v0.4.0)
           NOTES
           )
           gh release create "$TAG" \
