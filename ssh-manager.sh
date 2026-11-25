@@ -57,6 +57,14 @@ check_update() {
 # Display-only localization. Saved profile values stay compatible.
 language=en
 translation_from=(
+    '[R] Skript ausführen   [D] Skriptordner öffnen'
+    'Skript ausführen · Zielnummer (Enter zurück)'
+    'Verfügbare Skripte'
+    'Skriptnummer (Enter zurück)'
+    'Bitte eine angezeigte Skriptnummer eingeben.'
+    'Keine .sh-Dateien in user/ oder root/.'
+    'Lokale Shell im Skriptordner. Mit exit zurück zum Menü.'
+    'Skriptübertragung fehlgeschlagen.'
     'Der Kurzname braucht 1–64 Zeichen und beginnt mit einem Buchstaben oder einer Zahl. Erlaubt sind A–Z, 0–9, Punkt, Unterstrich und Bindestrich.'
     'Die Anmeldung mit dem bisherigen Schlüssel konnte nicht bestätigt werden. Ein neuer Eintrag kann bestehende Schlüsselbeschränkungen umgehen.'
     'Anmeldung mit dem vorgesehenen Schlüssel fehlgeschlagen. Beim nächsten Versuch wird derselbe Schlüssel verwendet.'
@@ -193,6 +201,14 @@ translation_from=(
     'Updateprüfung fehlgeschlagen.'
 )
 translation_to=(
+    '[R] Run script   [D] Open scripts folder'
+    'Run script · Target number (Enter to go back)'
+    'Available scripts'
+    'Script number (Enter to go back)'
+    'Enter a script number shown above.'
+    'No .sh files in user/ or root/.'
+    'Local shell in the scripts folder. Type exit to return to the menu.'
+    'Script upload failed.'
     'The short name must be 1–64 characters, starting with a letter or digit. Allowed: A–Z, 0–9, period, underscore, and hyphen.'
     'Authentication with the existing key could not be confirmed. A new entry could bypass key restrictions.'
     'Login with the intended key failed. The same key will be reused on the next attempt.'
@@ -618,12 +634,52 @@ connect_target() {
         [[ -f $key ]] || { fail 'Privater Schlüssel fehlt.'; return 1; }
         identity=(-o PreferredAuthentications=publickey -o IdentitiesOnly=yes -i "$key")
     fi
+    if [[ -n ${2:-} ]]; then
+        run_remote_script "$2" "${identity[@]}" "${connection[@]}"
+        return
+    fi
     if ssh "${identity[@]}" "${connection[@]}"; then
         menu_text 'SSH-Sitzung beendet.'
     else
         status=$?
         menu_text "SSH beendet (Status $status). Details stehen in der SSH-Ausgabe."
     fi
+}
+
+run_remote_script() {
+    local file=$1 temp runner status
+    shift
+    # Upload separately so sudo and the script can read from the terminal.
+    local upload='umask 077; f=$(mktemp /tmp/ssh-manager.XXXXXXXXXX) || exit 1; if sed "s/\r$//" > $f; then echo $f; else rm -f $f; exit 1; fi'
+    temp=$(ssh -T -o RemoteCommand=none "$@" "$upload" < "$file") &&
+        [[ $temp =~ ^/tmp/ssh-manager\.[A-Za-z0-9]{10}$ ]] || { fail 'Skriptübertragung fehlgeschlagen.'; return 1; }
+    runner="bash $temp"
+    if [[ ${file%/*} == "$store/scripts/root" ]]; then
+        runner="if [ \$(id -u) -eq 0 ]; then $runner; else sudo -u root -- $runner; fi"
+    fi
+    ssh -t -o RemoteCommand=none "$@" "trap 'rm -f $temp' EXIT; $runner" || {
+        status=$?
+        menu_text "SSH beendet (Status $status). Details stehen in der SSH-Ausgabe."
+    }
+}
+
+select_script() {
+    local file
+    local -a scripts=()
+    menu_text 'Verfügbare Skripte'
+    for file in "$store/scripts"/{user,root}/*.sh; do
+        [[ -f $file && ! -L $file && ${file##*/} != *[[:cntrl:]]* ]] || continue
+        scripts+=("$file")
+        menu_text "${#scripts[@]}  ${file#"$store/scripts/"}" literal
+    done
+    if ((! ${#scripts[@]})); then menu_text 'Keine .sh-Dateien in user/ oder root/.'; return 1; fi
+    ask 'Skriptnummer (Enter zurück)' || return 1
+    [[ -n $REPLY ]] || return 1
+    if [[ ! $REPLY =~ ^[0-9]{1,9}$ ]] || ((10#$REPLY < 1 || 10#$REPLY > ${#scripts[@]})); then
+        menu_text 'Bitte eine angezeigte Skriptnummer eingeben.'
+        return 1
+    fi
+    REPLY=${scripts[10#$REPLY-1]}
 }
 
 get_width() {
@@ -636,7 +692,7 @@ get_width() {
 }
 
 menu_text() {
-    translate_text "$1"
+    if [[ ${2:-} == literal ]]; then REPLY=$1; else translate_text "$1"; fi
     local text=$REPLY part
     while ((${#text} > width)); do
         part=${text:0:width}
@@ -781,6 +837,7 @@ read_option() {
     menu_text Optionen
     menu_text '[N] Neu   [B] Bearbeiten   [L] Löschen'
     menu_text '[S] Suchen   [I] Import   [E] Export'
+    menu_text '[R] Skript ausführen   [D] Skriptordner öffnen'
     menu_text '[G] Sprache'
     if auto_updates_enabled; then
         menu_text '[A] Automatische Updates: Ein'
@@ -790,7 +847,7 @@ read_option() {
     menu_text '[U] Jetzt nach Updates suchen'
     menu_text '[Enter] Zurück'
     while ask Option; do
-        case ${REPLY,,} in ''|n|b|l|s|i|e|g|a|u) return 0 ;; esac
+        case ${REPLY,,} in ''|n|b|l|s|i|e|g|a|u|r|d) return 0 ;; esac
         menu_text 'Bitte eine angezeigte Option wählen.'
     done
     return 1
@@ -856,7 +913,7 @@ read_live_search() {
 }
 
 start_manager() {
-    local records rows total filter='' action selection index target name status
+    local records rows total filter='' action selection index target name status script_file
     local -a visible=()
     while true; do
         get_width
@@ -878,6 +935,17 @@ start_manager() {
                 case $action in
                     '') continue ;;
                     n) edit_target || true; continue ;;
+                    r)
+                        select_script || continue
+                        script_file=$REPLY
+                        for index in "${!visible[@]}"; do
+                            name=$(jq -r '.Name' <<< "${visible[index]}") || return 1
+                            menu_text "$((index + 1))  $name" literal
+                        done ;;
+                    d)
+                        menu_text 'Lokale Shell im Skriptordner. Mit exit zurück zum Menü.'
+                        (cd -- "$store/scripts" && bash -i)
+                        continue ;;
                     a)
                         if auto_updates_enabled; then
                             set_auto_updates off || return 1
@@ -911,6 +979,8 @@ start_manager() {
                 if ((! ${#visible[@]})); then menu_text 'Keine Ziele zur Auswahl.'; continue; fi
                 if [[ $action == b ]]; then
                     ask 'Bearbeiten · Nr (Enter zurück)' || return 0
+                elif [[ $action == r ]]; then
+                    ask 'Skript ausführen · Zielnummer (Enter zurück)' || return 0
                 else
                     ask 'Löschen · Nr (Enter zurück)' || return 0
                 fi
@@ -924,6 +994,7 @@ start_manager() {
         index=$((10#$selection - 1))
         target=${visible[index]}
         case $action in
+            r) connect_target "$target" "$script_file" || true ;;
             b) edit_target "$target" || true ;;
             l)
                 name=$(jq -r '.Name' <<< "$target") || continue
@@ -965,7 +1036,7 @@ main() {
     for dependency in jq ssh ssh-keygen flock; do
         command -v "$dependency" >/dev/null || { fail "Benötigter Befehl fehlt ($dependency)."; return 1; }
     done
-    mkdir -p -- "$store" || return 1
+    mkdir -p -- "$store/scripts"/{user,root} || return 1
     ensure_short_commands
     if auto_updates_enabled; then check_update; fi
     start_manager
