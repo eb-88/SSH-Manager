@@ -29,6 +29,10 @@ ssh() {
     fi
     if [[ $command == 'cd ~ && sh -s -- '* ]]; then
         (cd -- "$remote" && sh -s -- "${command##* }")
+    elif [[ $command == 'umask 077; f=$(mktemp /tmp/ssh-manager.'* ]]; then
+        sh -c "$command"
+    elif [[ $command == "trap 'rm -f /tmp/ssh-manager."* ]]; then
+        (PATH="$scratch/bin:$PATH" sh -c "$command")
     fi
 }
 
@@ -69,6 +73,30 @@ key="${ready[0]%.ready}"
 check grep -Fx 'ops@::1:22' "$key.ready"
 check grep -Fx 'ssh-ed25519 QUJD' "$remote/.ssh/authorized_keys"
 check grep -F 'SSH-Sitzung beendet.' "$screen"
+
+# Use the normal menus, execute the uploaded copy locally and simulate remote sudo.
+mkdir "$scratch/bin"
+printf '#!/bin/sh\necho 1000\n' > "$scratch/bin/id"
+printf '#!/bin/sh\n[ "$1 $2 $3" = "-u root --" ] || exit 8\nshift 3\nexport TEST_SUDO=root\nexec "$@"\n' > "$scratch/bin/sudo"
+chmod +x "$scratch/bin/"*
+run_menu o r q
+check grep -F 'Keine .sh-Dateien' "$screen"
+for role in user root; do
+    printf 'echo "role=${TEST_SUDO:-user}"\r\necho "$0"\r\nexit 7\r\n' > "$store/scripts/$role/status check.sh"
+done
+before=$(wc -l < "$calls")
+run_menu o s web o r '' o r 3 o r 1 '' q
+check test "$(wc -l < "$calls")" -eq "$before"
+for choice in 1 2; do
+    run_menu o s web o r "$choice" 1 q
+    role=user
+    if [[ $choice == 2 ]]; then role=root; fi
+    check grep -Fx "role=$role" "$screen"
+    check grep -F 'SSH beendet (Status 7)' "$screen"
+    temp=$(grep -E '^/tmp/ssh-manager\.[[:alnum:]]{10}$' "$screen")
+    check test ! -e "$temp"
+    check grep -F -- '-t -o RemoteCommand=none -p 2222 -l deploy -- example.org' "$calls"
+done
 
 run_menu o b 1 '' '' '' 2200 '' '' q
 auth=other

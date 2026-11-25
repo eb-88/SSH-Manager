@@ -9,6 +9,11 @@ function Assert($condition, $message) {
 # Nur die interaktiven Programme ersetzen. Speicherung und Verbindungsablauf laufen wie im Menü.
 function ssh {
     $script:calls += ,@($args)
+    if ($args[-1] -like 'umask 077; f=*') {
+        $script:uploaded = $input -join "`n"
+        $global:LASTEXITCODE = 0
+        return $uploadReply
+    }
     $global:LASTEXITCODE = if ($args -contains '-E') {
             $log = $args[[array]::IndexOf($args, '-E') + 1]
             $lines = @(
@@ -135,6 +140,32 @@ try {
     $menuWidth = 80
     function Write-Host([string]$Object, $ForegroundColor) { $screen.Add($Object) }
     function Get-MenuWidth { $menuWidth }
+    $before = $calls.Count
+    $answers = [Collections.Queue]::new(@('O','R','Q'))
+    Start-Manager
+    Assert ($screen -contains 'Keine .sh-Dateien in user/ oder root/.' -and $calls.Count -eq $before) 'Empty script folders started SSH.'
+    $uploadReply = '/tmp/ssh-manager.a123456789'
+    foreach ($role in 'user', 'root') {
+        [IO.File]::WriteAllText((Join-Path $store "scripts/$role/status check.sh"), "echo Grüße-$role")
+    }
+    $answers = [Collections.Queue]::new(@('O','S','Zweit','O','R','','O','R','3','O','R','1','','Q'))
+    Start-Manager
+    Assert ($calls.Count -eq $before) 'Cancelling or selecting an invalid script started SSH.'
+    foreach ($choice in '1','2') {
+        $role = if ($choice -eq '1') { 'user' } else { 'root' }
+        $answers = [Collections.Queue]::new(@('O','S','Zweit','O','R',$choice,'1','Q'))
+        Start-Manager
+        $run = $calls[-1]
+        Assert ($uploaded -ceq "echo Grüße-$role" -and $calls[-2] -ccontains '-T' -and $run -ccontains '-t' -and
+            ($run -join ' ') -like '*-p 2222 -l alice ::1 *' -and $run[-1].Contains("bash $uploadReply") -and
+            $run[-1].Contains('sudo -u root --') -eq ($role -eq 'root')) "Incorrect script, target or permissions for $role."
+    }
+    $uploadReply = '/tmp/unexpected; exit 0'
+    $before = $calls.Count
+    $answers = [Collections.Queue]::new(@('O','S','Zweit','O','R','1','1','Q'))
+    Start-Manager
+    Assert ($calls.Count -eq $before + 1 -and $screen -contains 'Fehler · Skriptübertragung fehlgeschlagen.') 'Invalid upload response reached the execution step.'
+    $screen.Clear()
     $answers = [Collections.Queue]::new(@('O','B','1','Archiv','','','','','O','L','1','n','Q'))
     Start-Manager
     $edited = Get-Targets | Where-Object Name -eq Archiv
@@ -363,6 +394,15 @@ try {
     Assert ((Get-AutoUpdateEnabled) -and [IO.File]::ReadAllText($setting) -ceq 'on') 'Re-enabling automatic updates failed.'
     Write-Output 'Alle Tests bestanden.'
 } finally {
+    foreach ($role in 'user', 'root') {
+        $dir = Join-Path $store "scripts/$role"
+        if ([IO.Directory]::Exists($dir)) {
+            [IO.File]::Delete((Join-Path $dir 'status check.sh'))
+            [IO.Directory]::Delete($dir)
+        }
+    }
+    $dir = Join-Path $store 'scripts'
+    if ([IO.Directory]::Exists($dir)) { [IO.Directory]::Delete($dir) }
     foreach ($file in [IO.Directory]::GetFiles($store)) { [IO.File]::Delete($file) }
     [IO.Directory]::Delete($store)
 }

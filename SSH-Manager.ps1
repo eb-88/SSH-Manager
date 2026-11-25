@@ -50,6 +50,14 @@ function Test-ManagerUpdate([switch]$Manual) {
 # Display-only localization. Persisted profile and export values never change.
 $script:Language = 'en'
 $script:English = @{
+    '[R] Skript ausführen   [D] Skriptordner öffnen' = '[R] Run script   [D] Open scripts folder'
+    'Skript ausführen · Zielnummer (Enter zurück)' = 'Run script · Target number (Enter to go back)'
+    'Verfügbare Skripte' = 'Available scripts'
+    'Skriptnummer (Enter zurück)' = 'Script number (Enter to go back)'
+    'Bitte eine angezeigte Skriptnummer eingeben.' = 'Enter a script number shown above.'
+    'Keine .sh-Dateien in user/ oder root/.' = 'No .sh files in user/ or root/.'
+    'Lokale Shell im Skriptordner. Mit exit zurück zum Menü.' = 'Local shell in the scripts folder. Type exit to return to the menu.'
+    'Skriptübertragung fehlgeschlagen.' = 'Script upload failed.'
     'Der Kurzname braucht 1–64 Zeichen und beginnt mit einem Buchstaben oder einer Zahl. Erlaubt sind A–Z, 0–9, Punkt, Unterstrich und Bindestrich.' = 'The short name must be 1–64 characters, starting with a letter or digit. Allowed: A–Z, 0–9, period, underscore, and hyphen.'
     'Die Anmeldung mit dem bisherigen Schlüssel konnte nicht bestätigt werden. Ein neuer Eintrag kann bestehende Schlüsselbeschränkungen umgehen.' = 'Authentication with the existing key could not be confirmed. A new entry could bypass key restrictions.'
     'Anmeldung mit dem vorgesehenen Schlüssel fehlgeschlagen. Beim nächsten Versuch wird derselbe Schlüssel verwendet.' = 'Login with the intended key failed. The same key will be reused on the next attempt.'
@@ -423,8 +431,8 @@ function Get-MenuWidth {
     80
 }
 
-function Write-MenuText([string]$text, $width = (Get-MenuWidth), $color) {
-    $text = Translate-Text $text
+function Write-MenuText([string]$text, $width = (Get-MenuWidth), $color, [switch]$Literal) {
+    if (-not $Literal) { $text = Translate-Text $text }
     $style = @{}
     if ($color) { $style.ForegroundColor = $color }
     while ($text.Length -gt $width) {
@@ -596,7 +604,7 @@ fi
     }
 }
 
-function Connect-Target($target) {
+function Connect-Target($target, [IO.FileInfo]$scriptFile) {
     Assert-Target $target
     $connection = @('-p', $target.Port, '-l', $target.User, $target.Server)
     $identity = @()
@@ -609,9 +617,47 @@ function Connect-Target($target) {
         }
         if (-not [IO.File]::Exists($key)) { throw "Privater Schlüssel fehlt: $key" }
     }
-    & ssh @identity @connection
+    if ($scriptFile) {
+        # A separate upload leaves the terminal available for sudo and interactive scripts.
+        $OutputEncoding = [Text.UTF8Encoding]::new($false)
+        $content = [IO.File]::ReadAllText($scriptFile.FullName)
+        $upload = 'umask 077; f=$(mktemp /tmp/ssh-manager.XXXXXXXXXX) || exit 1; if sed ''s/\r$//'' > $f; then echo $f; else rm -f $f; exit 1; fi'
+        $temp = $content | & ssh -T -o RemoteCommand=none @identity @connection $upload
+        if ($LASTEXITCODE -ne 0 -or $temp -isnot [string] -or $temp -cnotmatch '\A/tmp/ssh-manager\.[A-Za-z0-9]{10}\z') {
+            throw 'Skriptübertragung fehlgeschlagen.'
+        }
+        $runner = "bash $temp"
+        if ($scriptFile.Directory.Name -ceq 'root') {
+            $runner = "if [ `$(id -u) -eq 0 ]; then $runner; else sudo -u root -- $runner; fi"
+        }
+        & ssh -t -o RemoteCommand=none @identity @connection "trap 'rm -f $temp' EXIT; $runner"
+    } else {
+        & ssh @identity @connection
+    }
     if ($LASTEXITCODE -eq 0) { Write-MenuText 'SSH-Sitzung beendet.' }
     else { Write-MenuText "SSH beendet (Status $LASTEXITCODE). Details stehen in der SSH-Ausgabe." }
+}
+
+function Select-TargetScript($width) {
+    $scripts = @(foreach ($role in 'user', 'root') {
+        Get-ChildItem -LiteralPath (Join-Path $store "scripts/$role") -File | Where-Object {
+            $_.Name -clike '*.sh' -and $_.Name -notmatch '^[.]|\p{Cc}' -and -not ($_.Attributes -band [IO.FileAttributes]::ReparsePoint)
+        } | Sort-Object Name
+    })
+    if (-not $scripts.Count) { Write-MenuText 'Keine .sh-Dateien in user/ oder root/.' $width; return }
+    Write-MenuText 'Verfügbare Skripte' $width
+    for ($i = 0; $i -lt $scripts.Count; $i++) {
+        $file = $scripts[$i]
+        Write-MenuText "$($i + 1)  $($file.Directory.Name)/$($file.Name)" $width -Literal
+    }
+    $selection = Read-MenuInput 'Skriptnummer (Enter zurück)' $width
+    if ([string]::IsNullOrWhiteSpace($selection)) { return }
+    $index = 0
+    if (-not [int]::TryParse($selection, [ref]$index) -or $index -lt 1 -or $index -gt $scripts.Count) {
+        Write-MenuText 'Bitte eine angezeigte Skriptnummer eingeben.' $width
+        return
+    }
+    return $scripts[$index - 1]
 }
 
 function Get-UserModuleDirectory {
@@ -807,6 +853,7 @@ function Read-ManagerOption($width) {
     Write-MenuText 'Optionen' $width Cyan
     Write-MenuText '[N] Neu   [B] Bearbeiten   [L] Löschen' $width
     Write-MenuText '[S] Suchen   [I] Import   [E] Export' $width
+    Write-MenuText '[R] Skript ausführen   [D] Skriptordner öffnen' $width
     Write-MenuText '[G] Sprache' $width
     Write-MenuText $(if (Get-AutoUpdateEnabled) { '[A] Automatische Updates: Ein' } else { '[A] Automatische Updates: Aus' }) $width
     Write-MenuText '[U] Jetzt nach Updates suchen' $width
@@ -815,7 +862,7 @@ function Read-ManagerOption($width) {
         $inputText = Read-MenuInput 'Option' $width
         if ($null -eq $inputText) { return }
         $action = $inputText.Trim()
-        if ($action -in '', 'N', 'B', 'L', 'S', 'I', 'E', 'G', 'A', 'U') { return $action }
+        if ($action -in '', 'N', 'B', 'L', 'S', 'I', 'E', 'G', 'A', 'U', 'R', 'D') { return $action }
         Write-MenuText 'Bitte eine angezeigte Option wählen.' $width
     }
 }
@@ -864,6 +911,7 @@ function Read-LiveSearch($allTargets, [string]$currentFilter) {
 }
 
 function Start-Manager {
+    foreach ($role in 'user', 'root') { [void][IO.Directory]::CreateDirectory((Join-Path $store "scripts/$role")) }
     $filter = ''
     $previousWidth = 0
     $refresh = $true
@@ -896,6 +944,14 @@ function Start-Manager {
                 continue
             }
             if ($action -eq 'U') { Test-ManagerUpdate -Manual; continue }
+            if ($action -eq 'D') {
+                Push-Location -LiteralPath (Join-Path $store 'scripts')
+                try {
+                    Write-MenuText 'Lokale Shell im Skriptordner. Mit exit zurück zum Menü.' $width
+                    $Host.EnterNestedPrompt()
+                } finally { Pop-Location }
+                continue
+            }
             if ($action -eq 'G') {
                 Write-MenuText 'Sprache wählen · [1] Englisch  [2] Deutsch' $width Cyan
                 $languageChoice = Read-MenuInput 'Sprache (Enter zurück)' $width
@@ -928,13 +984,24 @@ function Start-Manager {
                 }
                 continue
             }
+            if ($action -eq 'R') {
+                $scriptFile = Select-TargetScript $width
+                if (-not $scriptFile) { continue }
+                for ($i = 0; $i -lt $targets.Count; $i++) {
+                    Write-MenuText "$($i + 1)  $($targets[$i].Name)  ·  $(Format-TargetAddress $targets[$i])" $width -Literal
+                }
+            }
             $selection = $choice
-            if ($action -in 'B', 'L') {
+            if ($action -in 'B', 'L', 'R') {
                 if (-not $targets.Count) {
                     Write-MenuText 'Keine Ziele zur Auswahl.' $width
                     continue
                 }
-                $prompt = if ($action -eq 'B') { 'Bearbeiten · Nr (Enter zurück)' } else { 'Löschen · Nr (Enter zurück)' }
+                $prompt = switch ($action) {
+                    'B' { 'Bearbeiten · Nr (Enter zurück)' }
+                    'L' { 'Löschen · Nr (Enter zurück)' }
+                    'R' { 'Skript ausführen · Zielnummer (Enter zurück)' }
+                }
                 $selection = Read-MenuInput $prompt $width
                 if ($null -eq $selection) { return }
                 if ([string]::IsNullOrWhiteSpace($selection)) { continue }
@@ -948,6 +1015,7 @@ function Start-Manager {
             $target = $targets[$index-1]
             $refresh = $true
             switch ($action) {
+                'R' { Connect-Target $target $scriptFile }
                 'B' { Edit-Target $target }
                 'L' {
                     Write-Host ''

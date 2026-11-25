@@ -60,11 +60,22 @@ Mit **O** öffnest du das Menü `Optionen`. **Enter** bringt dich von dort zurü
 | **L** | Löschen | Ein Ziel auswählen und mit **j** aus der Liste entfernen. |
 | **I** | Import | Ziele aus einer exportierten JSON-Datei übernehmen. Gleichnamige Ziele werden übersprungen. |
 | **E** | Export | Alle Ziele in eine neue JSON-Datei schreiben, auch bei aktiver Suche. |
+| **D** | Skriptordner öffnen | Eine lokale Shell im Skriptverzeichnis öffnen. |
+| **R** | Skript ausführen | Ein Skript und danach den Zielserver auswählen. |
 
 PowerShell und Bash verwenden dasselbe JSON-Exportformat. Die Datei enthält Kurznamen, Hosts, Benutzernamen, Ports und Anmeldearten. Öffentliche und private Schlüssel, Passwörter, lokale Schlüsselzuordnungen und OpenSSH-Konfiguration bleiben auf dem ursprünglichen Gerät. Beim ersten Verbinden mit einem importierten Ziel richtet der Manager bei Bedarf einen neuen verwalteten Schlüssel ein. Ziele mit der Anmeldeart **OpenSSH** verwenden die Konfiguration des aktuellen Rechners.
 
 Die Zielprofile liegen als `ziel-*.json` in `~/.ssh/ssh-manager/` in deinem Benutzerverzeichnis. Im selben Ordner liegen die vom Manager erzeugten Schlüssel. Serverpasswörter werden nicht gespeichert. Beim Löschen eines Ziels bleiben die lokalen Schlüsseldateien und die zugehörige Zugriffsberechtigung auf dem Server erhalten.
 
+
+## Eigene Skripte ausführen
+
+Der Manager legt beim Start zwei lokale Ordner an. Bash-Skripte in `~/.ssh/ssh-manager/scripts/user/` laufen als gespeicherter SSH-Benutzer. Skripte in `~/.ssh/ssh-manager/scripts/root/` laufen als Root. Dafür muss der SSH-Benutzer auf dem Ziel `sudo -u root -- bash` ausführen dürfen oder bereits als Root angemeldet sein.
+
+1. Öffne mit **O → D** das Skriptverzeichnis. Lege dort zum Beispiel mit `nano user/status.sh` ein Skript mit der Zeile `uptime` an. Speichere es und kehre mit `exit` zum Manager zurück.
+2. Wähle **O → R**, die Skriptnummer und anschließend die Zielnummer. Die Liste zeigt den Ordner bei jedem Dateinamen an. **Enter** bricht die Auswahl ab.
+
+Auf dem Ziel muss Bash installiert sein. Die lokalen `.sh`-Dateien brauchen kein Ausführungsbit. Der Manager überträgt das gewählte Skript in eine temporäre Datei und startet es in einer zweiten SSH-Verbindung. Dabei sind Eingaben für `sudo` und für das Skript direkt im Terminal möglich. Nach der Ausführung wird die temporäre Datei entfernt.
 
 ## Updates
 
